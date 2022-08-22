@@ -21,7 +21,7 @@ def getDataLoader(opt):
     # data_folder
     data_folder = get_data_folder(opt)
 
-    if opt.dataset == 'cifar10':
+    if opt.dataset == 'CIFAR10':
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2470, 0.2435, 0.2616])
     else:
         normalize = transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
@@ -34,11 +34,11 @@ def getDataLoader(opt):
         normalize])
 
     # dataset
-    if opt.dataset == 'cifar10':
+    if opt.dataset == 'CIFAR10':
         num_classes = 10
         train_dataset = datasets.CIFAR10(root=data_folder, train=True, transform=train_transform, download=True)
         test_dataset = datasets.CIFAR10(root=data_folder, train=False, transform=test_transform, download=True)
-    elif opt.dataset == 'cifar100':
+    elif opt.dataset == 'CIFAR100':
         num_classes = 100
         train_dataset = datasets.CIFAR100(root=data_folder, train=True, transform=train_transform, download=True)
         test_dataset = datasets.CIFAR100(root=data_folder, train=False, transform=test_transform, download=True)
