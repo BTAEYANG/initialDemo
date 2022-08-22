@@ -17,9 +17,9 @@ def validate(val_loader, model, criterion, opt):
 
     with torch.no_grad():
         end = time.time()
-        for idx, (input, target) in enumerate(val_loader):
+        for idx, data in enumerate(val_loader):
 
-            input = input.float()
+            input, target = data
             if torch.cuda.is_available():
                 input = input.cuda()
                 target = target.cuda()

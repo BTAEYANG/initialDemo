@@ -87,12 +87,11 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
     for idx, data in enumerate(train_loader):
 
         data_time.update(time.time() - end)
+        input, target = data
 
-        input = input.float()
         if torch.cuda.is_available():
             input = input.cuda()
             target = target.cuda()
-            index = index.cuda()
 
         # ===================forward=====================
         preact = False
