@@ -96,13 +96,13 @@ class FPD(nn.Module):
         se_g_t = [self.se(t) for t in g_t]
         se_g_s = [self.se(s) for s in g_s]
 
-        if len(error_index):
-            for t, s, se_t, se_s in zip(g_t, g_s, se_g_t, se_g_s):
-                for j in error_index:
-                    t[j] = 0
-                    s[j] = 0
-                    se_t[j] = 0
-                    se_s[j] = 0
+        # if len(error_index):
+        #     for t, s, se_t, se_s in zip(g_t, g_s, se_g_t, se_g_s):
+        #         for j in error_index:
+        #             t[j] = 0
+        #             s[j] = 0
+        #             se_t[j] = 0
+        #             se_s[j] = 0
 
         return g_t, g_s, se_g_t, se_g_s
 
