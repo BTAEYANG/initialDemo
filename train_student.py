@@ -83,11 +83,6 @@ def parse_option():
     for it in iterations:
         opt.lr_decay_epochs.append(int(it))
 
-    weight_iterations = opt.weight_decay_epochs.split(',')
-    opt.weight_decay_epochs = list([])
-    for it in weight_iterations:
-        opt.weight_decay_epochs.append(int(it))
-
     opt.model_t = get_teacher_name(opt.path_t)
 
     opt.model_name = 'Student:{}_Teacher:{}_{}_{}_r:{}_a:{}_b:{}_{}'.format(opt.model_s, opt.model_t, opt.dataset,
