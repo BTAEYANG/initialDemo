@@ -24,3 +24,10 @@ class GKD(nn.Module):
 
         loss = F.kl_div(correct_s, correct_t, reduction='sum') * (self.t ** 2) / count
         return loss, count, error_index
+
+
+if __name__ == '__main__':
+    a = torch.randn(64, 32, 32)
+    b = torch.zeros(64, 32, 32)
+
+
