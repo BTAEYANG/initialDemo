@@ -86,10 +86,11 @@ class FPD(nn.Module):
         s_p1 = self._upSample_add(s_p2, self.lat_layer1(f_s[1]))  # 256 + (64 -> 256)
         s_p0 = self._upSample_add(s_p1, self.lat_layer0(f_s[0]))  # 256 + (32 -> 256)
 
-        # 在得到相加后的特征后，利用3×3卷积对生成的P1至P3再进行融合，目的是消除上采样过程带来的重叠效应，以生成最终的特征图
-        t_p = [t_p3, t_p2, t_p1, t_p0]  # t_p3 256*8*8  t_p2 256*16*16  t_p1 256*32*32  t_p0 256*32*32
+        # t_p3 256*8*8  t_p2 256*16*16  t_p1 256*32*32  t_p0 256*32*32
+        t_p = [t_p3, t_p2, t_p1, t_p0]
         s_p = [s_p3, s_p2, s_p1, s_p0]
 
+        # 在得到相加后的特征后，利用3×3卷积对生成的P1至P3再进行融合，目的是消除上采样过程带来的重叠效应，以生成最终的特征图
         g_t = [self.smooth(t) for t in t_p]
         g_s = [self.smooth(s) for s in s_p]
 
@@ -99,10 +100,10 @@ class FPD(nn.Module):
         if len(error_index):
             for t, s, se_t, se_s in zip(g_t, g_s, se_g_t, se_g_s):
                 for j in error_index:
-                    t[j]*0
-                    s[j]*0
-                    se_t[j]*0
-                    se_s[j]*0
+                    t[j] *= 0
+                    s[j] *= 0
+                    se_t[j] *= 0
+                    se_s[j] *= 0
 
         return g_t, g_s, se_g_t, se_g_s
 

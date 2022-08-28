@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import os
 import argparse
-import socket
 import time
 
 import tensorboard_logger as tb_logger
@@ -44,7 +43,7 @@ def parse_option():
                                  'wrn_16_1', 'wrn_16_2', 'wrn_40_1', 'wrn_40_2',
                                  'vgg8', 'vgg11', 'vgg13', 'vgg16', 'vgg19',
                                  'MobileNetV2', 'ShuffleV1', 'ShuffleV2', ])
-    parser.add_argument('--dataset', type=str, default='cifar100', choices=['cifar100', 'cifar10'], help='dataset')
+    parser.add_argument('--dataset', type=str, default='CIFAR100', choices=['CIFAR100', 'CIFAR10'], help='dataset')
 
     parser.add_argument('-t', '--trial', type=int, default=0, help='the experiment id')
 

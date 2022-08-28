@@ -244,7 +244,7 @@ def resnet32x4(**kwargs):
 if __name__ == '__main__':
     x = torch.randn(10, 3, 32, 32)
 
-    net = resnet56(num_classes=100)
+    net = resnet32x4(num_classes=100)
 
     feats, logit = net(x, is_feat=True, preact=True)
     for f in feats:

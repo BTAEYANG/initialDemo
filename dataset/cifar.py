@@ -8,7 +8,8 @@ def get_data_folder(opt):
     """
     return server-dependent path to store the data
     """
-    root_path = '/home/lab265/lab265/datasets'
+    # root_path = 'E:/home/lab265/lab265/datasets'  # windows
+    root_path = '/home/lab265/lab265/datasets'  # linux
     data_folder = os.path.join(root_path, opt.dataset)
 
     if not os.path.isdir(data_folder):
@@ -25,9 +26,14 @@ def getDataLoader(opt):
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2470, 0.2435, 0.2616])
     else:
         normalize = transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
+
     # train_transform
     train_transform = transforms.Compose(
         [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), normalize])
+
+    # train_transform = transforms.Compose(
+    #     [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor()])
+
     # test_transform
     test_transform = transforms.Compose([
         transforms.ToTensor(),
