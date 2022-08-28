@@ -100,10 +100,10 @@ class FPD(nn.Module):
         if len(error_index):
             for t, s, se_t, se_s in zip(g_t, g_s, se_g_t, se_g_s):
                 for j in error_index:
-                    t[j] *= 0
-                    s[j] *= 0
-                    se_t[j] *= 0
-                    se_s[j] *= 0
+                    t[j].data *= 0
+                    s[j].data *= 0
+                    se_t[j].data *= 0
+                    se_s[j].data *= 0
 
         return g_t, g_s, se_g_t, se_g_s
 
