@@ -133,10 +133,12 @@ class FPD_Loss(nn.Module):
         return loss
 
     def forward(self, g_t, g_s, se_g_t, se_g_s):
-        loss_f = self._spatial_mean_loss(g_s, g_t)
-        loss_se_f = self._channel_mean_loss(se_g_s, se_g_t)
+        loss_f_s = self._spatial_mean_loss(g_s, g_t)
+        loss_f_c = self._channel_mean_loss(g_s, g_t)
+        loss_se_f_s = self._spatial_mean_loss(se_g_s, se_g_t)
+        loss_se_f_c = self._channel_mean_loss(se_g_s, se_g_t)
 
-        loss = [loss_f, loss_se_f]
+        loss = [loss_f_s, loss_f_c, loss_se_f_s, loss_se_f_c]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
 
