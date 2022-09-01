@@ -1,8 +1,11 @@
+import math
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 from paper.SELayer import SELayer
+from paper.ScaledDotProductAttention import ScaledDotProductAttention
 
 
 def add_conv(in_ch, out_ch, k_size, stride, leaky=True):
@@ -56,8 +59,12 @@ class FPD(nn.Module):
 
     @staticmethod
     def _upSample_add(x, y):
-        _, _, H, W = y.shape
-        return F.interpolate(x, size=(H, W), mode='bilinear') + y
+        b, c, h, w = y.shape
+        self_attention = ScaledDotProductAttention(d_model=h * w, d_k=h * w, d_v=h * w, h=8, dropout=0)
+        x_output = self_attention(x, x, x)
+        se_attention = SELayer(c, math.sqrt(c))
+        x_output = se_attention(x_output)
+        return F.interpolate(x_output, size=(h, w), mode='bilinear') + y
 
     def forward(self, f_t, f_s, error_index):
         # resnet110 resnet32: t0-16, t1-16, t2-32, t3-64
@@ -74,8 +81,9 @@ class FPD(nn.Module):
         # resnet32x4 resnet8x4: t0-32, t1-64, t2-128, t3-256
 
         # _upSample_add
-        t_p3 = self.lat_layer3(f_t[3])  # 256
-        t_p2 = self._upSample_add(t_p3, self.lat_layer2(f_t[2]))  # 256 + (128 -> 256)
+        t_p3 = self.lat_layer3(f_t[3])  # 8*8*256
+        t_p2 = self._upSample_add(t_p3, self.lat_layer2(
+            f_t[2]))  # self.lat_layer2(f_t[2]): 16*16*128 -> 16*16*256  _upSample_add: t_p3 (8*8*256) -> (16*16*256)
         t_p1 = self._upSample_add(t_p2, self.lat_layer1(f_t[1]))  # 256 + (64 -> 256)
         t_p0 = self._upSample_add(t_p1, self.lat_layer0(f_t[0]))  # 256 + (32 -> 256)
 

@@ -83,67 +83,69 @@ class ScaledDotProductAttention(nn.Module):
 
 if __name__ == '__main__':
 
-    conv = nn.Conv2d(in_channels=128,
-                     out_channels=3, kernel_size=1, stride=1,
-                     padding=0, bias=False)
+    pass
 
-    # model
-    model_t = load_teacher(model_path='../save/models/resnet32x4_vanilla/ckpt_epoch_240.pth', n_cls=100)
-    model_s = model_dict["resnet8x4"](num_classes=100)
-
-    opt = parse_option()
-
-    opt.batch_size = 2
-    opt.dataset = 'CIFAR100'
-
-    # dataloader
-    train_loader, val_loader, n_cls = getDataLoader(opt)
-
-    for idx, data in enumerate(train_loader):
-        input, target = data
-
-        img = input[0].transpose(0, 2).transpose(0, 1)
-        image_1 = np.array(img)
-        plt.imshow(image_1)
-        plt.show()
-
-        if torch.cuda.is_available():
-            input = input.cuda()
-            target = target.cuda()
-
-        feat_s, logit_s = model_s(input, is_feat=True, preact=False)
-
-        feat_t, logit_t = model_t(input, is_feat=True, preact=False)
-
-        img_tensor_t = conv(feat_t[2])
-        img_tensor_t = img_tensor_t[0].view(3, 16, 16)
-        img_tensor_t = img_tensor_t.transpose(0, 2).transpose(0, 1)
-        image_t = np.array(img_tensor_t.detach().numpy())
-        plt.imshow(image_t)
-        plt.show()
-
-        img_tensor_s = conv(feat_s[2])
-        img_tensor_s = img_tensor_s[0].view(3, 16, 16)
-        img_tensor_s = img_tensor_s.transpose(0, 2).transpose(0, 1)
-        image_s = np.array(img_tensor_s.detach().numpy())
-        plt.imshow(image_s)
-        plt.show()
-
-        img_tensor_s = img_tensor_s.transpose(1, 0).transpose(2, 0)
-        img_tensor_t = img_tensor_t.transpose(1, 0).transpose(2, 0)
-        print(img_tensor_t.shape, img_tensor_s.shape)
-        img_tensor_t = img_tensor_t.permute(0, 2, 1)
-
-        print(img_tensor_t.shape)
-
-        att = torch.bmm(img_tensor_t, img_tensor_s)
-        att = torch.bmm(att, img_tensor_s)
-        img_tensor_as = att.transpose(0, 2).transpose(0, 1)
-        image_as = np.array(img_tensor_as.detach().numpy())
-        plt.imshow(image_as)
-        plt.show()
-
-        break
+    # conv = nn.Conv2d(in_channels=128,
+    #                  out_channels=3, kernel_size=1, stride=1,
+    #                  padding=0, bias=False)
+    #
+    # # model
+    # model_t = load_teacher(model_path='../save/models/resnet32x4_vanilla/ckpt_epoch_240.pth', n_cls=100)
+    # model_s = model_dict["resnet8x4"](num_classes=100)
+    #
+    # opt = parse_option()
+    #
+    # opt.batch_size = 2
+    # opt.dataset = 'CIFAR100'
+    #
+    # # dataloader
+    # train_loader, val_loader, n_cls = getDataLoader(opt)
+    #
+    # for idx, data in enumerate(train_loader):
+    #     input, target = data
+    #
+    #     img = input[0].transpose(0, 2).transpose(0, 1)
+    #     image_1 = np.array(img)
+    #     plt.imshow(image_1)
+    #     plt.show()
+    #
+    #     if torch.cuda.is_available():
+    #         input = input.cuda()
+    #         target = target.cuda()
+    #
+    #     feat_s, logit_s = model_s(input, is_feat=True, preact=False)
+    #
+    #     feat_t, logit_t = model_t(input, is_feat=True, preact=False)
+    #
+    #     img_tensor_t = conv(feat_t[2])
+    #     img_tensor_t = img_tensor_t[0].view(3, 16, 16)
+    #     img_tensor_t = img_tensor_t.transpose(0, 2).transpose(0, 1)
+    #     image_t = np.array(img_tensor_t.detach().numpy())
+    #     plt.imshow(image_t)
+    #     plt.show()
+    #
+    #     img_tensor_s = conv(feat_s[2])
+    #     img_tensor_s = img_tensor_s[0].view(3, 16, 16)
+    #     img_tensor_s = img_tensor_s.transpose(0, 2).transpose(0, 1)
+    #     image_s = np.array(img_tensor_s.detach().numpy())
+    #     plt.imshow(image_s)
+    #     plt.show()
+    #
+    #     img_tensor_s = img_tensor_s.transpose(1, 0).transpose(2, 0)
+    #     img_tensor_t = img_tensor_t.transpose(1, 0).transpose(2, 0)
+    #     print(img_tensor_t.shape, img_tensor_s.shape)
+    #     img_tensor_t = img_tensor_t.permute(0, 2, 1)
+    #
+    #     print(img_tensor_t.shape)
+    #
+    #     att = torch.bmm(img_tensor_t, img_tensor_s)
+    #     att = torch.bmm(att, img_tensor_s)
+    #     img_tensor_as = att.transpose(0, 2).transpose(0, 1)
+    #     image_as = np.array(img_tensor_as.detach().numpy())
+    #     plt.imshow(image_as)
+    #     plt.show()
+    #
+    #     break
 
     # t_input = torch.randn(2, 32, 16, 16)
     # s_input = torch.randn(2, 32, 16, 16)
