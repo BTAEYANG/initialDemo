@@ -128,7 +128,7 @@ class FPD(nn.Module):
         s_l_1 = self.lat_layer1(f_s[1])
         s_p1 = self._upSample_add(s_p2, s_l_1)  # 256 + (64 -> 256)
 
-        s_l_0 = self.lat_layer1(f_s[0])
+        s_l_0 = self.lat_layer0(f_s[0])
         s_p0 = self._upSample_add(s_p1, s_l_0)  # 256 + (32 -> 256)
 
         # t_p3 256*8*8  t_p2 256*16*16  t_p1 256*32*32  t_p0 256*32*32
