@@ -74,7 +74,8 @@ class FPD(nn.Module):
         return F.interpolate(x, size=(H, W), mode='bilinear') + y
 
     def forward(self, f_t, f_s, error_index):
-        # resnet110 resnet32: t0-16, t1-16, t2-32, t3-64
+
+        # resnet110 resnet32: t0-16, t1-16, t2-32, t3-64  # resnet32x4 resnet8x4: t0-32, t1-64, t2-128, t3-256
         f_t[0] = self.resize_0(f_t[0])
         f_t[1] = self.resize_1(f_t[1])
         f_t[2] = self.resize_2(f_t[2])
@@ -85,23 +86,50 @@ class FPD(nn.Module):
         f_s[2] = self.resize_2(f_s[2])
         f_s[3] = self.resize_3(f_s[3])
 
-        # resnet32x4 resnet8x4: t0-32, t1-64, t2-128, t3-256
-
-        # _upSample_add
-        t_p3 = self.lat_layer3(f_t[3])  # 8*8*256
-        t_p3 = self.self_attention_3(t_p3, t_p3, t_p3)
-        t_p2 = self._upSample_add(t_p3, self.lat_layer2(f_t[2]))  # self.lat_layer2(f_t[2]): 16*16*128 -> 16*16*256  _upSample_add: t_p3 (8*8*256) -> (16*16*256)
-        t_p2 = self.self_attention_2(t_p2, t_p2, t_p2)
-        t_p1 = self._upSample_add(t_p2, self.lat_layer1(f_t[1]))  # 256 + (64 -> 256)
-        t_p1 = self.self_attention_2(t_p1, t_p1, t_p1)
-        t_p0 = self._upSample_add(t_p1, self.lat_layer0(f_t[0]))  # 256 + (32 -> 256)
-
         # f0-32, f1-64, f2-128, f3-256, f4-256 (out)
+        # teacher lat_layer
+        t_p3 = self.lat_layer3(f_t[3])  # 8*8*256
+
+        # attention
+        b_3, c_3, h_3, w_3 = t_p3.shape
+        t_p3_at_input = t_p3.contiguous().view(b_3, c_3, h_3 * w_3)
+        t_p3_at = self.self_attention_3(t_p3_at_input, t_p3_at_input, t_p3_at_input)
+        t_p3 = t_p3_at.contiguous().view(b_3, c_3, h_3, w_3)
+
         # _upSample_add
+        t_l_2 = self.lat_layer2(f_t[2])  # 16*16*128 -> 16*16*256
+        t_p2 = self._upSample_add(t_p3, t_l_2)  # _upSample_add: t_p3 (8*8*256) -> (16*16*256)
+
+        # attention
+        b_2, c_2, h_2, w_2 = t_p2.shape
+        t_p2_at_input = t_p2.contiguous().view(b_2, c_2, h_2 * w_2)
+        t_p2_at = self.self_attention_2(t_p2_at_input, t_p2_at_input, t_p2_at_input)
+        t_p2 = t_p2_at.contiguous().view(b_2, c_2, h_2, w_2)
+
+        # _upSample_add
+        t_l_1 = self.lat_layer1(f_t[1])
+        t_p1 = self._upSample_add(t_p2, t_l_1)  # 256 + (64 -> 256)
+
+        # attention
+        b_1, c_1, h_1, w_1 = t_p1.shape
+        t_p1_at_input = t_p1.contiguous().view(b_1, c_1, h_1 * w_1)
+        t_p1_at = self.self_attention_1(t_p1_at_input, t_p1_at_input, t_p1_at_input)
+        t_p1 = t_p1_at.contiguous().view(b_1, c_1, h_1, w_1)
+
+        t_l_0 = self.lat_layer0(f_t[0])
+        t_p0 = self._upSample_add(t_p1, t_l_0)  # 256 + (32 -> 256)
+
+        # student lat_layer
         s_p3 = self.lat_layer3(f_s[3])  # 256
-        s_p2 = self._upSample_add(s_p3, self.lat_layer2(f_s[2]))  # 256 + (128 -> 256)
-        s_p1 = self._upSample_add(s_p2, self.lat_layer1(f_s[1]))  # 256 + (64 -> 256)
-        s_p0 = self._upSample_add(s_p1, self.lat_layer0(f_s[0]))  # 256 + (32 -> 256)
+
+        s_l_2 = self.lat_layer2(f_s[2])
+        s_p2 = self._upSample_add(s_p3, s_l_2)  # 256 + (128 -> 256)
+
+        s_l_1 = self.lat_layer1(f_s[1])
+        s_p1 = self._upSample_add(s_p2, s_l_1)  # 256 + (64 -> 256)
+
+        s_l_0 = self.lat_layer1(f_s[0])
+        s_p0 = self._upSample_add(s_p1, s_l_0)  # 256 + (32 -> 256)
 
         # t_p3 256*8*8  t_p2 256*16*16  t_p1 256*32*32  t_p0 256*32*32
         t_p = [t_p3, t_p2, t_p1, t_p0]
