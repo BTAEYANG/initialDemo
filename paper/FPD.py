@@ -28,28 +28,43 @@ class FPD(nn.Module):
     def __init__(self, feat_t, feat_s):
         super(FPD, self).__init__()
 
-        # initial feature size
-        initial_size_0 = feat_t[0].size()[1]
-        initial_size_1 = feat_t[1].size()[1]
-        initial_size_2 = feat_t[2].size()[1]
-        initial_size_3 = feat_t[3].size()[1]
+        # initial feature channel
+        b_0, c_0, h_0, w_0 = feat_t[0].shape
+        b_1, c_1, h_1, w_1 = feat_t[1].shape
+        b_2, c_2, h_2, w_2 = feat_t[2].shape
+        b_3, c_3, h_3, w_3 = feat_t[3].shape
+
+        # attention
+        self.self_attention_0 = ScaledDotProductAttention(d_model=h_0 * h_0, d_k=h_0 * h_0, d_v=h_0 * h_0, h=8)
+        self.se_attention_0 = SELayer(c_0, math.sqrt(c_0))
+
+        self.self_attention_1 = ScaledDotProductAttention(d_model=h_1 * h_1, d_k=h_1 * h_1, d_v=h_1 * h_1, h=8)
+        self.se_attention_1 = SELayer(c_1, math.sqrt(c_1))
+
+        self.self_attention_2 = ScaledDotProductAttention(d_model=h_2 * h_2, d_k=h_2 * h_2, d_v=h_2 * h_2, h=8,
+                                                          dropout=0)
+        self.se_attention_2 = SELayer(c_2, math.sqrt(c_2))
+
+        self.self_attention_3 = ScaledDotProductAttention(d_model=h_3 * h_3, d_k=h_3 * h_3, d_v=h_3 * h_3, h=8,
+                                                          dropout=0)
+        self.se_attention_3 = SELayer(c_3, math.sqrt(c_3))
 
         # expand channel
-        resize_0_channel = max(initial_size_0, 32)
-        resize_1_channel = max(initial_size_1, 64)
-        resize_2_channel = max(initial_size_2, 128)
-        resize_3_channel = max(initial_size_3, 256)
+        resize_c_0 = max(c_0, 32)
+        resize_c_1 = max(c_1, 64)
+        resize_c_2 = max(c_2, 128)
+        resize_c_3 = max(c_3, 256)
 
-        self.lat_layer0 = add_conv(resize_0_channel, 256, 3, 1)
-        self.lat_layer1 = add_conv(resize_1_channel, 256, 3, 1)
-        self.lat_layer2 = add_conv(resize_2_channel, 256, 3, 1)
-        self.lat_layer3 = add_conv(resize_3_channel, 256, 3, 1)
+        self.lat_layer0 = add_conv(resize_c_0, 256, 3, 1)
+        self.lat_layer1 = add_conv(resize_c_1, 256, 3, 1)
+        self.lat_layer2 = add_conv(resize_c_2, 256, 3, 1)
+        self.lat_layer3 = add_conv(resize_c_3, 256, 3, 1)
 
         # resnet change channel
-        self.resize_0 = add_conv(initial_size_0, resize_0_channel, 3, 1)
-        self.resize_1 = add_conv(initial_size_1, resize_1_channel, 3, 1)
-        self.resize_2 = add_conv(initial_size_2, resize_2_channel, 3, 1)
-        self.resize_3 = add_conv(initial_size_3, resize_3_channel, 3, 1)
+        self.resize_0 = add_conv(c_0, resize_c_0, 3, 1)
+        self.resize_1 = add_conv(c_1, resize_c_1, 3, 1)
+        self.resize_2 = add_conv(c_2, resize_c_2, 3, 1)
+        self.resize_3 = add_conv(c_3, resize_c_3, 3, 1)
 
         # se reduction = 16
         self.se = SELayer(256, 16)
@@ -59,12 +74,8 @@ class FPD(nn.Module):
 
     @staticmethod
     def _upSample_add(x, y):
-        b, c, h, w = y.shape
-        self_attention = ScaledDotProductAttention(d_model=h * w, d_k=h * w, d_v=h * w, h=8, dropout=0)
-        x_output = self_attention(x, x, x)
-        se_attention = SELayer(c, math.sqrt(c))
-        x_output = se_attention(x_output)
-        return F.interpolate(x_output, size=(h, w), mode='bilinear') + y
+        _, _, H, W = y.shape
+        return F.interpolate(x, size=(H, W), mode='bilinear') + y
 
     def forward(self, f_t, f_s, error_index):
         # resnet110 resnet32: t0-16, t1-16, t2-32, t3-64
@@ -82,9 +93,11 @@ class FPD(nn.Module):
 
         # _upSample_add
         t_p3 = self.lat_layer3(f_t[3])  # 8*8*256
-        t_p2 = self._upSample_add(t_p3, self.lat_layer2(
-            f_t[2]))  # self.lat_layer2(f_t[2]): 16*16*128 -> 16*16*256  _upSample_add: t_p3 (8*8*256) -> (16*16*256)
+        t_p3 = self.self_attention_3(t_p3, t_p3, t_p3)
+        t_p2 = self._upSample_add(t_p3, self.lat_layer2(f_t[2]))  # self.lat_layer2(f_t[2]): 16*16*128 -> 16*16*256  _upSample_add: t_p3 (8*8*256) -> (16*16*256)
+        t_p2 = self.self_attention_2(t_p2, t_p2, t_p2)
         t_p1 = self._upSample_add(t_p2, self.lat_layer1(f_t[1]))  # 256 + (64 -> 256)
+        t_p1 = self.self_attention_2(t_p1, t_p1, t_p1)
         t_p0 = self._upSample_add(t_p1, self.lat_layer0(f_t[0]))  # 256 + (32 -> 256)
 
         # f0-32, f1-64, f2-128, f3-256, f4-256 (out)
