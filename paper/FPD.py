@@ -36,18 +36,14 @@ class FPD(nn.Module):
 
         # attention
         self.self_attention_0 = ScaledDotProductAttention(d_model=h_0 * h_0, d_k=h_0 * h_0, d_v=h_0 * h_0, h=8)
-        self.se_attention_0 = SELayer(c_0, math.sqrt(c_0))
 
         self.self_attention_1 = ScaledDotProductAttention(d_model=h_1 * h_1, d_k=h_1 * h_1, d_v=h_1 * h_1, h=8)
-        self.se_attention_1 = SELayer(c_1, math.sqrt(c_1))
 
         self.self_attention_2 = ScaledDotProductAttention(d_model=h_2 * h_2, d_k=h_2 * h_2, d_v=h_2 * h_2, h=8,
                                                           dropout=0)
-        self.se_attention_2 = SELayer(c_2, math.sqrt(c_2))
 
         self.self_attention_3 = ScaledDotProductAttention(d_model=h_3 * h_3, d_k=h_3 * h_3, d_v=h_3 * h_3, h=8,
                                                           dropout=0)
-        self.se_attention_3 = SELayer(c_3, math.sqrt(c_3))
 
         # expand channel
         resize_c_0 = max(c_0, 32)
