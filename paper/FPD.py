@@ -8,7 +8,7 @@ from paper.SELayer import SELayer
 from paper.ScaledDotProductAttention import ScaledDotProductAttention
 
 
-def add_conv(in_ch, out_ch, k_size, stride, leaky=False, R_relu=True):
+def add_conv(in_ch, out_ch, k_size, stride, leaky=True, R_relu=False):
     conv_module = nn.Sequential()
     pad_size = (k_size - 1) // 2
     conv_module.add_module('conv', nn.Conv2d(in_channels=in_ch,
