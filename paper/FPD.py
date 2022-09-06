@@ -97,10 +97,10 @@ class FPD(nn.Module):
         t_p2 = self._upSample_add(t_p3, t_l_2)  # _upSample_add: t_p3 (8*8*256) -> (16*16*256)
 
         # attention
-        b_2, c_2, h_2, w_2 = t_p2.shape
-        t_p2_at_input = t_p2.contiguous().view(b_2, c_2, h_2 * w_2)
-        t_p2_at = self.self_attention_2(t_p2_at_input, t_p2_at_input, t_p2_at_input)
-        t_p2 = t_p2_at.contiguous().view(b_2, c_2, h_2, w_2)
+        # b_2, c_2, h_2, w_2 = t_p2.shape
+        # t_p2_at_input = t_p2.contiguous().view(b_2, c_2, h_2 * w_2)
+        # t_p2_at = self.self_attention_2(t_p2_at_input, t_p2_at_input, t_p2_at_input)
+        # t_p2 = t_p2_at.contiguous().view(b_2, c_2, h_2, w_2)
 
         # _upSample_add
         t_l_1 = self.lat_layer1(f_t[1])
@@ -139,14 +139,16 @@ class FPD(nn.Module):
         se_g_s = [self.se(s) for s in g_s]
 
         if len(error_index):
-            for t, s, se_t, se_s in zip(g_t, g_s, se_g_t, se_g_s):
+            for ft, fs, gt, gs, se_gt, se_gs in zip(f_t, f_s, g_t, g_s, se_g_t, se_g_s):
                 for j in error_index:
-                    t[j].data *= 0
-                    s[j].data *= 0
-                    se_t[j].data *= 0
-                    se_s[j].data *= 0
+                    ft[j].data *= 0
+                    fs[j].data *= 0
+                    gt[j].data *= 0
+                    gs[j].data *= 0
+                    se_gt[j].data *= 0
+                    se_gs[j].data *= 0
 
-        return g_t, g_s, se_g_t, se_g_s
+        return f_t, f_s, g_t, g_s, se_g_t, se_g_s
 
 
 class FPD_Loss(nn.Module):
@@ -173,13 +175,15 @@ class FPD_Loss(nn.Module):
             loss += self.mse(s, t)
         return loss
 
-    def forward(self, g_t, g_s, se_g_t, se_g_s):
-        loss_f_s = self._spatial_mean_loss(g_s, g_t)
-        loss_f_c = self._channel_mean_loss(g_s, g_t)
+    def forward(self, f_t, f_s, g_t, g_s, se_g_t, se_g_s):
+        loss_f_s = self._spatial_mean_loss(f_s, f_t)
+        loss_f_c = self._channel_mean_loss(f_s, f_t)
+        loss_g_f_s = self._spatial_mean_loss(g_s, g_t)
+        loss_g_f_c = self._channel_mean_loss(g_s, g_t)
         loss_se_f_s = self._spatial_mean_loss(se_g_s, se_g_t)
         loss_se_f_c = self._channel_mean_loss(se_g_s, se_g_t)
 
-        loss = [loss_f_s, loss_f_c, loss_se_f_s, loss_se_f_c]
+        loss = [loss_f_s, loss_f_c, loss_g_f_s, loss_g_f_c, loss_se_f_s, loss_se_f_c]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
 
