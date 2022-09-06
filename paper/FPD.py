@@ -8,17 +8,17 @@ from paper.SELayer import SELayer
 from paper.ScaledDotProductAttention import ScaledDotProductAttention
 
 
-def add_conv(in_ch, out_ch, k_size, stride, leaky=False, R_relu=True):
+def add_conv(in_ch, out_ch, k_size, stride, leaky=True):
     conv_module = nn.Sequential()
     pad_size = (k_size - 1) // 2
     conv_module.add_module('conv', nn.Conv2d(in_channels=in_ch,
                                              out_channels=out_ch, kernel_size=k_size, stride=stride,
                                              padding=pad_size, bias=False))
-    # conv_module.add_module('batch_norm', nn.BatchNorm2d(out_ch))
+    conv_module.add_module('batch_norm', nn.BatchNorm2d(out_ch))
     if leaky:
-        conv_module.add_module('leaky', nn.LeakyReLU(inplace=True))
-    if R_relu:
-        conv_module.add_module('R-relu', nn.RReLU(inplace=True))
+        conv_module.add_module('leaky', nn.LeakyReLU(0.1))
+    else:
+        conv_module.add_module('relu6', nn.ReLU6(inplace=True))
     return conv_module
 
 
