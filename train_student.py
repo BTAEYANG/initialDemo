@@ -116,7 +116,7 @@ def main():
     model_t = load_teacher(opt.path_t, n_cls)
     model_s = model_dict[opt.model_s](num_classes=n_cls)
 
-    data = torch.randn(opt.batch_size, 3, 32, 32)
+    data = torch.randn(2, 3, 32, 32)
     model_t.eval()
     model_s.eval()
 
