@@ -24,12 +24,7 @@ class SKD(nn.Module):
     def __init__(self, feat_t, feat_s):
         super(SKD, self).__init__()
 
-        # initial feature channel
-        b, c, h, w = feat_t[0].shape
-
         self.stage = len(feat_t)
-
-        self.batch_size = b
 
         self.conv = add_conv(self.stage, self.stage, 3, 1)
 
@@ -45,13 +40,14 @@ class SKD(nn.Module):
         return relation_matrix
 
     def forward(self, f_t, f_s):
+        # initial feature channel
+        b, _, _, _ = f_t[0].shape
+
         f_t = [i.view(i.shape[0], -1) for i in f_t]
         f_s = [i.view(i.shape[0], -1) for i in f_s]
 
-        relation_t = torch.stack([self._relation_dist(i) for i in f_t]).view(1, self.stage, self.batch_size,
-                                                                             self.batch_size)
-        relation_s = torch.stack([self._relation_dist(i) for i in f_s]).view(1, self.stage, self.batch_size,
-                                                                             self.batch_size)
+        relation_t = torch.stack([self._relation_dist(i) for i in f_t]).view(1, self.stage, b, b)
+        relation_s = torch.stack([self._relation_dist(i) for i in f_s]).view(1, self.stage, b, b)
 
         relation_t = self.conv(relation_t)
         relation_s = self.conv(relation_s)
