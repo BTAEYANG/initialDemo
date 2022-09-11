@@ -26,7 +26,3 @@ class GKD(nn.Module):
         return loss, error_index
 
 
-if __name__ == '__main__':
-    pass
-
-

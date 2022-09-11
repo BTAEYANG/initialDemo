@@ -20,6 +20,7 @@ from distillation_zoo.KD import DistillKL
 from models import model_dict
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
+from paper_skd.SKD import SKD, SKD_Loss
 from util.tool import adjust_learning_rate, get_teacher_name, load_teacher
 from util.train_loops import train_distill
 from util.val_loops import validate
@@ -59,7 +60,7 @@ def parse_option():
     # distillation
     parser.add_argument('--distill', type=str, default='kd', choices=['kd', 'FPD', 'hint', 'attention', 'similarity',
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
-                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst'])
+                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
@@ -141,6 +142,11 @@ def main():
         module_list.append(fpd)
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
+    elif opt.distill == 'SKD':
+        skd = SKD(feat_t, feat_s)
+        module_list.append(skd)
+        trainable_list.append(skd)
+        criterion_kd = SKD_Loss()
     else:
         raise NotImplementedError(opt.distill)
 
