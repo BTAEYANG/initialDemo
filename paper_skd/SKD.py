@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 
 
-def add_conv(in_ch, out_ch, k_size, stride, leaky=True, bn=True):
+def add_conv(in_ch, out_ch, k_size, stride, leaky=True, bn=False):
     conv_module = nn.Sequential()
     pad_size = (k_size - 1) // 2
     conv_module.add_module('conv', nn.Conv2d(in_channels=in_ch,
@@ -29,9 +29,7 @@ class SKD(nn.Module):
 
         self.bs = opt.batch_size
 
-        self.conv_d = add_conv(self.stage, self.stage, 3, 1)
-
-        self.conv_a = add_conv(self.bs, self.bs, 3, 1)
+        self.conv = add_conv(self.stage, self.stage, 3, 1)
 
     @staticmethod
     def _relation_dist(f, eps=1e-12, squared=False):
@@ -62,21 +60,21 @@ class SKD(nn.Module):
         relation_t_d = torch.stack(f_t).view(1, self.stage, b, b)
         relation_s_d = torch.stack(f_s).view(1, self.stage, b, b)
 
-        relation_t_d = self.conv_d(relation_t_d)
-        relation_s_d = self.conv_d(relation_s_d)
+        relation_t_d = self.conv(relation_t_d)
+        relation_s_d = self.conv(relation_s_d)
 
         # sample angle loss
         with torch.no_grad():
             f_t = [i.view(i.shape[0], -1) for i in f_t]
             td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
-            t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td])
+            t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td]).transpose(0, 1)
 
         f_s = [i.view(i.shape[0], -1) for i in f_s]
         sd = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_s]
-        s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd])
+        s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
 
-        relation_t_a = self.conv_a(t_angle)
-        relation_s_a = self.conv_a(s_angle)
+        relation_t_a = self.conv(t_angle)
+        relation_s_a = self.conv(s_angle)
 
         return relation_t_d, relation_s_d, relation_t_a, relation_s_a
 
