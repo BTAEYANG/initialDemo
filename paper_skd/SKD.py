@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 
 def add_conv(in_ch, out_ch, k_size, stride, leaky=True, bn=True):
@@ -21,15 +22,19 @@ def add_conv(in_ch, out_ch, k_size, stride, leaky=True, bn=True):
 
 class SKD(nn.Module):
 
-    def __init__(self, feat_t, feat_s):
+    def __init__(self, feat_t, feat_s, opt):
         super(SKD, self).__init__()
 
         self.stage = len(feat_t)
 
-        self.conv = add_conv(self.stage, self.stage, 3, 1)
+        self.bs = opt.batch_size
+
+        self.conv_d = add_conv(self.stage, self.stage, 3, 1)
+
+        self.conv_a = add_conv(self.bs, self.bs, 3, 1)
 
     @staticmethod
-    def _relation_dist(f, eps=1e-12, squared=True):
+    def _relation_dist(f, eps=1e-12, squared=False):
         f_square = f.pow(2).sum(dim=1)
         f_matrix = f @ f.t()
         relation_matrix = (f_square.unsqueeze(1) + f_square.unsqueeze(0) - 2 * f_matrix).clamp(min=eps)
@@ -46,13 +51,34 @@ class SKD(nn.Module):
         f_t = [i.view(i.shape[0], -1) for i in f_t]
         f_s = [i.view(i.shape[0], -1) for i in f_s]
 
-        relation_t = torch.stack([self._relation_dist(i) for i in f_t]).view(1, self.stage, b, b)
-        relation_s = torch.stack([self._relation_dist(i) for i in f_s]).view(1, self.stage, b, b)
+        # sample distance loss
+        with torch.no_grad():
+            f_t = [self._relation_dist(i) for i in f_t]
+            f_t = [i / (i[i > 0].mean()) for i in f_t]
 
-        relation_t = self.conv(relation_t)
-        relation_s = self.conv(relation_s)
+        f_s = [self._relation_dist(i) for i in f_s]
+        f_s = [i / (i[i > 0].mean()) for i in f_s]
 
-        return relation_t, relation_s
+        relation_t_d = torch.stack(f_t).view(1, self.stage, b, b)
+        relation_s_d = torch.stack(f_s).view(1, self.stage, b, b)
+
+        relation_t_d = self.conv_d(relation_t_d)
+        relation_s_d = self.conv_d(relation_s_d)
+
+        # sample angle loss
+        with torch.no_grad():
+            f_t = [i.view(i.shape[0], -1) for i in f_t]
+            td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
+            t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td])
+
+        f_s = [i.view(i.shape[0], -1) for i in f_s]
+        sd = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_s]
+        s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd])
+
+        relation_t_a = self.conv_a(t_angle)
+        relation_s_a = self.conv_a(s_angle)
+
+        return relation_t_d, relation_s_d, relation_t_a, relation_s_a
 
 
 class SKD_Loss(nn.Module):
@@ -79,10 +105,15 @@ class SKD_Loss(nn.Module):
             loss += self.mse(s, t)
         return loss
 
-    def forward(self, r_t, r_s):
-        loss_r_s = self._spatial_mean_loss(r_t, r_s)
-        loss_r_c = self._channel_mean_loss(r_t, r_s)
+    def forward(self, r_t_d, r_s_d, r_t_a, r_s_a):
+        loss_d_s = self._spatial_mean_loss(r_t_d, r_s_d)
+        loss_d_c = self._channel_mean_loss(r_t_d, r_s_d)
 
-        loss = loss_r_s + loss_r_c
+        loss_a_s = self._spatial_mean_loss(r_t_a, r_s_a)
+        loss_a_c = self._channel_mean_loss(r_t_a, r_s_a)
+
+        loss = loss_d_s + loss_d_c + loss_a_s + loss_a_c
 
         return loss
+
+
