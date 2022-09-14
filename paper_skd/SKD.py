@@ -13,7 +13,7 @@ def add_conv(in_ch, out_ch, k_size, stride, leaky=True):
     conv_module.add_module('batch_norm', nn.BatchNorm2d(out_ch))
 
     if leaky:
-        conv_module.add_module('leaky', nn.LeakyReLU(0.1))
+        conv_module.add_module('leaky', nn.LeakyReLU(inplace=True))
     else:
         conv_module.add_module('relu6', nn.ReLU6(inplace=True))
 
