@@ -94,7 +94,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             target = target.cuda()
 
         # ===================forward=====================
-        preact = False
+        preact = True
         # student model output : student feature map and student logit value
         feat_s, logit_s = model_s(input, is_feat=True, preact=preact)
         with torch.no_grad():
@@ -115,8 +115,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             f_t, f_s, g_t, g_s, se_g_t, se_g_s = module_list[1](feat_t, feat_s, error_index)
             loss_kd = criterion_kd(f_t, f_s, g_t, g_s, se_g_t, se_g_s)
         elif opt.distill == 'SKD':
-            # 打一句话
-            relation_t_d, relation_s_d, relation_t_a, relation_s_a = module_list[1](feat_t[:-1], feat_s[:-1])
+            relation_t_d, relation_s_d, relation_t_a, relation_s_a = module_list[1](feat_t, feat_s)
             loss_kd = criterion_kd(relation_t_d, relation_s_d, relation_t_a, relation_s_a)
         else:
             raise NotImplementedError(opt.distill)

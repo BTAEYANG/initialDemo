@@ -120,8 +120,8 @@ def main():
     model_t.eval()
     model_s.eval()
 
-    feat_t, _ = model_t(data, is_feat=True)
-    feat_s, _ = model_s(data, is_feat=True)
+    feat_t, _ = model_t(data, is_feat=True, preact=True)
+    feat_s, _ = model_s(data, is_feat=True, preact=True)
 
     # init module list to add student model and teacher model or other model need by some kd methods
     module_list = nn.ModuleList([])
@@ -143,7 +143,7 @@ def main():
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
     elif opt.distill == 'SKD':
-        skd = SKD(feat_t[:-1], feat_s[:-1], opt)
+        skd = SKD(feat_t, feat_s, opt)
         module_list.append(skd)
         trainable_list.append(skd)
         criterion_kd = SKD_Loss()

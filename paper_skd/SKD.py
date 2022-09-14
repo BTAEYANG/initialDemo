@@ -104,6 +104,7 @@ class SKD_Loss(nn.Module):
         return loss
 
     def forward(self, r_t_d, r_s_d, r_t_a, r_s_a):
+
         loss_d_s = self._spatial_mean_loss(r_t_d, r_s_d)
         loss_d_c = self._channel_mean_loss(r_t_d, r_s_d)
 
