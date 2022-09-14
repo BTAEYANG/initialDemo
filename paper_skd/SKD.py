@@ -60,8 +60,8 @@ class SKD(nn.Module):
         relation_t_d = torch.stack(f_t).view(1, self.stage, b, b)
         relation_s_d = torch.stack(f_s).view(1, self.stage, b, b)
 
-        relation_t_d = self.conv(relation_t_d)
-        relation_s_d = self.conv(relation_s_d)
+        # relation_t_d = self.conv(relation_t_d)
+        # relation_s_d = self.conv(relation_s_d)
 
         # sample angle loss
         with torch.no_grad():
@@ -73,10 +73,10 @@ class SKD(nn.Module):
         sd = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_s]
         s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
 
-        relation_t_a = self.conv(t_angle)
-        relation_s_a = self.conv(s_angle)
+        # relation_t_a = self.conv(t_angle)
+        # relation_s_a = self.conv(s_angle)
 
-        return relation_t_d, relation_s_d, relation_t_a, relation_s_a
+        return relation_t_d, relation_s_d, t_angle, s_angle
 
 
 class SKD_Loss(nn.Module):
