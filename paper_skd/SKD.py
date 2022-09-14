@@ -49,7 +49,7 @@ class SKD(nn.Module):
         f_t = [i.view(i.shape[0], -1) for i in f_t]
         f_s = [i.view(i.shape[0], -1) for i in f_s]
 
-        # sample distance loss
+        # sample distance relation
         with torch.no_grad():
             f_t = [self._relation_dist(i) for i in f_t]
             f_t = [i / (i[i > 0].mean()) for i in f_t]
@@ -60,15 +60,20 @@ class SKD(nn.Module):
         relation_t_d = torch.stack(f_t).view(1, self.stage, b, b)
         relation_s_d = torch.stack(f_s).view(1, self.stage, b, b)
 
-        # sample angle loss
+        # sample angle relation
         with torch.no_grad():
             f_t = [i.view(i.shape[0], -1) for i in f_t]
             td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
-            t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td]).transpose(0, 1)
+            t_angle = torch.stack(
+                [torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td]).transpose(0, 1)
 
         f_s = [i.view(i.shape[0], -1) for i in f_s]
         sd = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_s]
-        s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
+        s_angle = torch.stack(
+            [torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
+
+        # structure stage distance relation
+        # with torch.no_grad():
 
         return relation_t_d, relation_s_d, t_angle, s_angle
 
