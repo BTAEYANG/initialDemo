@@ -2,6 +2,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from models import resnet32x4
+
 
 def add_conv(in_ch, out_ch, k_size, stride, leaky=False):
     conv_module = nn.Sequential()
@@ -62,15 +64,11 @@ class SKD(nn.Module):
 
         # sample angle relation
         with torch.no_grad():
-            f_t = [i.view(i.shape[0], -1) for i in f_t]
             td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
-            t_angle = torch.stack(
-                [torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td]).transpose(0, 1)
+            t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td]).transpose(0, 1)
 
-        f_s = [i.view(i.shape[0], -1) for i in f_s]
         sd = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_s]
-        s_angle = torch.stack(
-            [torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
+        s_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in sd]).transpose(0, 1)
 
         # structure stage distance relation
         # with torch.no_grad():
@@ -113,3 +111,27 @@ class SKD_Loss(nn.Module):
         loss = loss_d_s + loss_d_c + loss_a_s + loss_a_c
 
         return loss
+
+
+if __name__ == '__main__':
+    x = torch.randn(10, 3, 32, 32)
+
+    net = resnet32x4(num_classes=100)
+
+    feats, logit = net(x, is_feat=True, preact=True)
+
+    feats.append(logit)
+
+    b, _, _, _ = feats[0].shape
+    stage = len(feats)
+
+    with torch.no_grad():
+        f_t = [i.view(i.shape[0], -1) for i in feats]
+        f_t = [SKD._relation_dist(i) for i in f_t]
+        relation_t_d = torch.stack(f_t).view(1, stage, b, b)
+        print(relation_t_d.shape)
+
+        # f_t = [i.view(i.shape[0], -1) for i in feats]
+        td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
+        t_angle = torch.stack([torch.bmm(F.normalize(i, p=2, dim=2), F.normalize(i, p=2, dim=2).transpose(1, 2)) for i in td])
+        print(t_angle.shape)
