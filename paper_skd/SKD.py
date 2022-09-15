@@ -135,28 +135,28 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    pass
-    # x = torch.randn(10, 3, 32, 32)
-    #
-    # b, _, _, _ = x.shape
-    #
-    # net = resnet32x4(num_classes=100)
-    #
-    # feats, logit = net(x, is_feat=True, preact=True)
-    #
-    # feats.append(logit)
-    #
-    # stage = len(feats)
-    #
-    # with torch.no_grad():
-    #     f_t = [i.view(i.shape[0], -1) for i in feats]
-    #     f_t = [SKD._relation_dist(i) for i in f_t]
-    #     relation_t_d = torch.stack(f_t).view(1, stage, b, b)
-    #     print(relation_t_d.shape)
-    #
-    #     cov_m = [cov_ma(i) for i in feats]
-    #     cov_m_t = torch.stack(cov_m)
-    #     print(cov_m_t.shape)
+
+    x = torch.randn(10, 3, 32, 32)
+
+    b, _, _, _ = x.shape
+
+    net = resnet32x4(num_classes=100)
+
+    feats, logit = net(x, is_feat=True, preact=True)
+
+    feats.append(logit)
+
+    stage = len(feats)
+
+    with torch.no_grad():
+        f_t = [i.view(i.shape[0], -1) for i in feats]
+        f_t = [SKD._relation_dist(i) for i in f_t]
+        relation_t_d = torch.stack(f_t).view(1, stage, b, b)
+        print(relation_t_d.shape)
+
+        cov_m = [SKD.cov_ma(i) for i in feats]
+        cov_m_t = torch.stack(cov_m)
+        print(cov_m_t.shape)
 
     # f_t = [i.view(i.shape[0], -1) for i in feats]
     # td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]
