@@ -94,7 +94,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             target = target.cuda()
 
         # ===================forward=====================
-        preact = True
+        preact = False
         # student model output : student feature map and student logit value
         feat_s, logit_s = model_s(input, is_feat=True, preact=preact)
         with torch.no_grad():
