@@ -5,23 +5,6 @@ import torch.nn.functional as F
 from models import resnet32x4
 
 
-def add_conv(in_ch, out_ch, k_size, stride, leaky=False):
-    conv_module = nn.Sequential()
-    pad_size = (k_size - 1) // 2
-    conv_module.add_module('conv', nn.Conv2d(in_channels=in_ch,
-                                             out_channels=out_ch, kernel_size=k_size, stride=stride,
-                                             padding=pad_size, bias=False))
-
-    conv_module.add_module('batch_norm', nn.BatchNorm2d(out_ch))
-
-    if leaky:
-        conv_module.add_module('leaky', nn.LeakyReLU(inplace=True))
-    else:
-        conv_module.add_module('relu6', nn.ReLU6(inplace=True))
-
-    return conv_module
-
-
 class SKD(nn.Module):
 
     def __init__(self, feat_t, feat_s, opt):
@@ -30,8 +13,6 @@ class SKD(nn.Module):
         self.stage = len(feat_t)
 
         self.bs = opt.batch_size
-
-        self.conv = add_conv(self.stage, self.stage, 3, 1)
 
     @staticmethod
     def _relation_dist(f, eps=1e-12, squared=False):
@@ -53,9 +34,15 @@ class SKD(nn.Module):
         f_cov = torch.stack([torch.cov(i.view(h * w, h * w)) for i in t_matrix_tuple])
         return f_cov
 
-    def forward(self, f_t, f_s):
+    def forward(self, f_t, f_s, error_index):
         # initial feature channel
         b, _, _, _ = f_t[0].shape
+
+        if len(error_index):
+            for ft, fs in zip(f_t, f_s):
+                for j in error_index:
+                    ft[j].data *= 0
+                    fs[j].data *= 0
 
         # structure stage cov relation
         with torch.no_grad():
@@ -150,7 +137,7 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    x = torch.randn(64, 3, 32, 32)
+    x = torch.randn(10, 3, 32, 32)
 
     b, _, _, _ = x.shape
 
@@ -160,14 +147,21 @@ if __name__ == '__main__':
 
     stage = len(feats)
 
-    with torch.no_grad():
-        f_t = [i.view(i.shape[0], -1) for i in feats]
-        f_t = [SKD._relation_dist(i) for i in f_t]
-        relation_t_d = torch.stack(f_t).view(1, stage, b, b)
-        print(relation_t_d.shape)
+    error_index = [0, 1, 6, 9]
 
-        cov_m = [SKD.cov_ma(i) for i in feats[:-1]]
-        print(cov_m[0].shape, cov_m[1].shape, cov_m[2].shape, cov_m[3].shape)
+    if len(error_index):
+        for ft in feats:
+            for j in error_index:
+                ft[j].data *= 0
+
+    # with torch.no_grad():
+    #     f_t = [i.view(i.shape[0], -1) for i in feats]
+    #     f_t = [SKD._relation_dist(i) for i in f_t]
+    #     relation_t_d = torch.stack(f_t).view(1, stage, b, b)
+    #     print(relation_t_d.shape)
+    #
+    #     cov_m = [SKD.cov_ma(i) for i in feats[:-1]]
+    #     print(cov_m[0].shape, cov_m[1].shape, cov_m[2].shape, cov_m[3].shape)
 
     # f_t = [i.view(i.shape[0], -1) for i in feats]
     # td = [i.unsqueeze(0) - i.unsqueeze(1) for i in f_t]

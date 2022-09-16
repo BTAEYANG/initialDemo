@@ -117,7 +117,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         elif opt.distill == 'SKD':
             # relation_t_d, relation_s_d, relation_t_a, relation_s_a = module_list[1](feat_t, feat_s)
             # loss_kd = criterion_kd(relation_t_d, relation_s_d, relation_t_a, relation_s_a)
-            cov_m_t, cov_m_s = module_list[1](feat_t[:-1], feat_s[:-1])
+            cov_m_t, cov_m_s = module_list[1](feat_t[:-1], feat_s[:-1], error_index)
             loss_kd = criterion_kd(cov_m_t, cov_m_s)
         else:
             raise NotImplementedError(opt.distill)
