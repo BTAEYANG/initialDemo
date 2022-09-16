@@ -59,9 +59,9 @@ class SKD(nn.Module):
 
         # structure stage cov relation
         with torch.no_grad():
-            cov_m_t = [self.cov_ma(i) for i in f_t[:-1]]
+            cov_m_t = [self.cov_ma(i) for i in f_t]
 
-        cov_m_s = [self.cov_ma(i) for i in f_s[:-1]]
+        cov_m_s = [self.cov_ma(i) for i in f_s]
 
         # f_t = [i.view(i.shape[0], -1) for i in f_t[:-1]]
         # f_s = [i.view(i.shape[0], -1) for i in f_s[:-1]]
