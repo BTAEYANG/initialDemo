@@ -100,14 +100,14 @@ class SKD_Loss(nn.Module):
     def __init__(self):
         super(SKD_Loss, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.mse = nn.MSELoss(reduction='mean')
+        self.huber = nn.HuberLoss(reduction='mean', delta=1.0)
 
     def _channel_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
             s = self.avg_pool(s)
             t = self.avg_pool(t)
-            loss += self.mse(s, t)
+            loss += self.huber(s, t)
         return loss
 
     def _spatial_mean_loss(self, x, y):
@@ -115,7 +115,7 @@ class SKD_Loss(nn.Module):
         for s, t in zip(x, y):
             s = s.mean(dim=1, keepdim=False)
             t = t.mean(dim=1, keepdim=False)
-            loss += self.mse(s, t)
+            loss += self.huber(s, t)
         return loss
 
     # def forward(self, r_t_d, r_s_d, r_t_a, r_s_a, cov_m_t, cov_m_s):
