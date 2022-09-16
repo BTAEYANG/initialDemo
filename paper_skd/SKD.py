@@ -38,12 +38,6 @@ class SKD(nn.Module):
         # initial feature channel
         b, _, _, _ = f_t[0].shape
 
-        if len(error_index):
-            for ft, fs in zip(f_t, f_s):
-                for j in error_index:
-                    ft[j].data *= 0
-                    fs[j].data *= 0
-
         # structure stage cov relation
         with torch.no_grad():
             cov_m_t = [self.cov_ma(i) for i in f_t]
@@ -137,22 +131,23 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    x = torch.randn(10, 3, 32, 32)
-
-    b, _, _, _ = x.shape
-
-    net = resnet32x4(num_classes=100)
-
-    feats, logit = net(x, is_feat=True, preact=True)
-
-    stage = len(feats)
-
-    error_index = [0, 1, 6, 9]
-
-    if len(error_index):
-        for ft in feats:
-            for j in error_index:
-                ft[j].data *= 0
+    pass
+    # x = torch.randn(10, 3, 32, 32)
+    #
+    # b, _, _, _ = x.shape
+    #
+    # net = resnet32x4(num_classes=100)
+    #
+    # feats, logit = net(x, is_feat=True, preact=True)
+    #
+    # stage = len(feats)
+    #
+    # error_index = [0, 1, 6, 9]
+    #
+    # if len(error_index):
+    #     for ft in feats:
+    #         for j in error_index:
+    #             ft[j].data *= 0
 
     # with torch.no_grad():
     #     f_t = [i.view(i.shape[0], -1) for i in feats]
