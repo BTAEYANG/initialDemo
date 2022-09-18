@@ -5,7 +5,6 @@ from torch import nn
 import torch.nn.functional as F
 
 from paper.SELayer import SELayer
-from paper.ScaledDotProductAttention import ScaledDotProductAttention
 
 
 def add_conv(in_ch, out_ch, k_size, stride, leaky=True):
@@ -33,13 +32,6 @@ class FPD(nn.Module):
         b_1, c_1, h_1, w_1 = feat_t[1].shape
         b_2, c_2, h_2, w_2 = feat_t[2].shape
         b_3, c_3, h_3, w_3 = feat_t[3].shape
-
-        # attention
-        self.self_attention_1 = ScaledDotProductAttention(d_model=h_1 * h_1, d_k=h_1 * h_1, d_v=h_1 * h_1, h=8)
-
-        self.self_attention_2 = ScaledDotProductAttention(d_model=h_2 * h_2, d_k=h_2 * h_2, d_v=h_2 * h_2, h=8)
-
-        self.self_attention_3 = ScaledDotProductAttention(d_model=h_3 * h_3, d_k=h_3 * h_3, d_v=h_3 * h_3, h=8)
 
         # expand channel
         resize_c_0 = max(c_0, 32)
@@ -86,31 +78,13 @@ class FPD(nn.Module):
         # teacher lat_layer
         t_p3 = self.lat_layer3(f_t[3])  # 8*8*256
 
-        # attention
-        # b_3, c_3, h_3, w_3 = t_p3.shape
-        # t_p3_at_input = t_p3.contiguous().view(b_3, c_3, h_3 * w_3)
-        # t_p3_at = self.self_attention_3(t_p3_at_input, t_p3_at_input, t_p3_at_input)
-        # t_p3 = t_p3_at.contiguous().view(b_3, c_3, h_3, w_3)
-
         # _upSample_add
         t_l_2 = self.lat_layer2(f_t[2])  # 16*16*128 -> 16*16*256
         t_p2 = self._upSample_add(t_p3, t_l_2)  # _upSample_add: t_p3 (8*8*256) -> (16*16*256)
 
-        # attention
-        # b_2, c_2, h_2, w_2 = t_p2.shape
-        # t_p2_at_input = t_p2.contiguous().view(b_2, c_2, h_2 * w_2)
-        # t_p2_at = self.self_attention_2(t_p2_at_input, t_p2_at_input, t_p2_at_input)
-        # t_p2 = t_p2_at.contiguous().view(b_2, c_2, h_2, w_2)
-
         # _upSample_add
         t_l_1 = self.lat_layer1(f_t[1])
         t_p1 = self._upSample_add(t_p2, t_l_1)  # 256 + (64 -> 256)
-
-        # attention
-        # b_1, c_1, h_1, w_1 = t_p1.shape
-        # t_p1_at_input = t_p1.contiguous().view(b_1, c_1, h_1 * w_1)
-        # t_p1_at = self.self_attention_1(t_p1_at_input, t_p1_at_input, t_p1_at_input)
-        # t_p1 = t_p1_at.contiguous().view(b_1, c_1, h_1, w_1)
 
         t_l_0 = self.lat_layer0(f_t[0])
         t_p0 = self._upSample_add(t_p1, t_l_0)  # 256 + (32 -> 256)
@@ -157,14 +131,14 @@ class FPD_Loss(nn.Module):
     def __init__(self):
         super(FPD_Loss, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.mse = nn.MSELoss(reduction='mean')
+        self.huber = nn.HuberLoss(reduction='mean', delta=1.0)
 
     def _channel_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
             s = self.avg_pool(s)
             t = self.avg_pool(t)
-            loss += self.mse(s, t)
+            loss += self.huber(s, t)
         return loss
 
     def _spatial_mean_loss(self, x, y):
@@ -172,7 +146,7 @@ class FPD_Loss(nn.Module):
         for s, t in zip(x, y):
             s = s.mean(dim=1, keepdim=False)
             t = t.mean(dim=1, keepdim=False)
-            loss += self.mse(s, t)
+            loss += self.huber(s, t)
         return loss
 
     def forward(self, f_t, f_s, g_t, g_s, se_g_t, se_g_s):

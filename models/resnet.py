@@ -119,7 +119,9 @@ class ResNet(nn.Module):
             raise ValueError('block_name shoule be Basicblock or Bottleneck')
 
         self.inplanes = num_filters[0]
-        self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, padding=1,
+        # self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, padding=1,
+        #                        bias=False)
+        self.conv1 = nn.Conv2d(6, num_filters[0], kernel_size=3, padding=1,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(num_filters[0])
         self.relu = nn.ReLU(inplace=True)
@@ -242,7 +244,7 @@ def resnet32x4(**kwargs):
 
 
 if __name__ == '__main__':
-    x = torch.randn(10, 3, 32, 32)
+    x = torch.randn(10, 6, 32, 32)
 
     net = resnet32x4(num_classes=100)
 
