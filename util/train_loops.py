@@ -1,6 +1,8 @@
 import sys
 import time
 import torch
+
+from util.edge_input import edge_conv2d
 from util.tool import AverageMeter, accuracy
 
 
@@ -88,6 +90,8 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
 
         data_time.update(time.time() - end)
         input, target = data
+
+        input = edge_conv2d(input)
 
         if torch.cuda.is_available():
             input = input.cuda()
