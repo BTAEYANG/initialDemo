@@ -2,7 +2,6 @@ import sys
 import time
 import torch
 
-from util.edge_input import edge_conv2d
 from util.tool import AverageMeter, accuracy
 
 

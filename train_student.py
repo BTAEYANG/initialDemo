@@ -21,7 +21,6 @@ from models import model_dict
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
 from paper_skd.SKD import SKD, SKD_Loss
-from util.edge_input import edge_conv2d
 from util.tool import adjust_learning_rate, get_teacher_name, load_teacher
 from util.train_loops import train_distill
 from util.val_loops import validate
