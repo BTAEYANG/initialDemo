@@ -114,8 +114,8 @@ def main():
     train_loader, val_loader, n_cls = getDataLoader(opt)
 
     # model
-    model_t = load_teacher(opt.path_t, n_cls)
-    model_s = model_dict[opt.model_s](num_classes=n_cls)
+    model_t = load_teacher(opt.path_t, n_cls, 'teacher')
+    model_s = model_dict[opt.model_s](num_classes=n_cls, model_type='student')
 
     data = torch.randn(2, 3, 32, 32)
 
