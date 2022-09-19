@@ -104,7 +104,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, depth, num_filters, block_name='BasicBlock', num_classes=10, model_type='student'):
+    def __init__(self, depth, num_filters, block_name='BasicBlock', num_classes=10):
         super(ResNet, self).__init__()
         # Model type specifies number of layers for CIFAR-10 model
         if block_name.lower() == 'basicblock':
@@ -120,12 +120,8 @@ class ResNet(nn.Module):
 
         self.inplanes = num_filters[0]
 
-        if model_type == 'teacher':
-            self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, padding=1,
-                                   bias=False)
-        else:
-            self.conv1 = nn.Conv2d(6, num_filters[0], kernel_size=3, padding=1,
-                                   bias=False)
+        self.conv1 = nn.Conv2d(3, num_filters[0], kernel_size=3, padding=1,
+                               bias=False)
 
         self.bn1 = nn.BatchNorm2d(num_filters[0])
         self.relu = nn.ReLU(inplace=True)
