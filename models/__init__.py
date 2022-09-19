@@ -36,5 +36,6 @@ from .ShuffleNetv2 import ShuffleV2
 # }
 
 model_dict = {
+    'resnet8x4': resnet8x4,
     'resnet32x4': resnet32x4
 }
