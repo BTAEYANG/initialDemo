@@ -4,9 +4,10 @@ from torch import nn
 
 
 def edge_conv2d(im):
+    input = im
     # 用nn.Conv2d定义卷积操作
     conv_op = nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
-    # 定义sobel算子参数，所有值除以3个人觉得出来的图更好些
+    # 定义sobel算子参数，所有值除以3，个人觉得出来的图更好些
     sobel_kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]], dtype='float32') / 3
     # 将sobel算子转换为适配卷积操作的卷积核
     sobel_kernel = sobel_kernel.reshape((1, 1, 3, 3))
@@ -20,10 +21,5 @@ def edge_conv2d(im):
     edge_detect = conv_op(im)
     edge_detect = edge_detect.squeeze().detach().numpy()
     edge_input = torch.cat([im, torch.tensor(edge_detect)], dim=1)
-    return edge_input
+    return input, edge_input
 
-
-if __name__ == '__main__':
-    input = torch.randn(3, 3, 32, 32)
-    edge_input = edge_conv2d(input)
-    print(edge_input.shape)

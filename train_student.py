@@ -118,12 +118,14 @@ def main():
     model_s = model_dict[opt.model_s](num_classes=n_cls)
 
     data = torch.randn(2, 3, 32, 32)
-    data = edge_conv2d(data)
+
+    input, edge_input = edge_conv2d(data)
+
     model_t.eval()
     model_s.eval()
 
-    feat_t, _ = model_t(data, is_feat=True, preact=False)
-    feat_s, _ = model_s(data, is_feat=True, preact=False)
+    feat_t, _ = model_t(input, is_feat=True, preact=False)
+    feat_s, _ = model_s(edge_input, is_feat=True, preact=False)
 
     # init module list to add student model and teacher model or other model need by some kd methods
     module_list = nn.ModuleList([])

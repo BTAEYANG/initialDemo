@@ -91,7 +91,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         data_time.update(time.time() - end)
         input, target = data
 
-        input = edge_conv2d(input)
+        input, edge_input = edge_conv2d(input)
 
         if torch.cuda.is_available():
             input = input.cuda()
@@ -100,7 +100,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         # ===================forward=====================
         preact = False
         # student model output : student feature map and student logit value
-        feat_s, logit_s = model_s(input, is_feat=True, preact=preact)
+        feat_s, logit_s = model_s(edge_input, is_feat=True, preact=preact)
         with torch.no_grad():
             # teacher model output : teacher feature map and teacher logit value
             feat_t, logit_t = model_t(input, is_feat=True, preact=preact)
