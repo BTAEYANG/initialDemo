@@ -44,12 +44,13 @@ class SKD_Loss(nn.Module):
 
     def __init__(self):
         super(SKD_Loss, self).__init__()
-        # self.huber = nn.HuberLoss(reduction='mean', delta=1.0)
-        self.smoothL1 = nn.SmoothL1Loss(reduction='mean', beta=1.0)
+        # self.huber = nn.HuberLoss()
+        # self.smoothL1 = nn.SmoothL1Loss()
+        self.mse = nn.MSELoss()
 
     def forward(self, t_pearson, s_pearson):
 
-        loss_stage = [self.smoothL1(i, j) for i, j in zip(t_pearson, s_pearson)]
+        loss_stage = [self.mse(i, j) for i, j in zip(t_pearson, s_pearson)]
         factor = F.softmax(torch.Tensor(loss_stage), dim=-1)
         loss = sum(factor[index] * loss_stage[index] for index, value in enumerate(loss_stage))
 
