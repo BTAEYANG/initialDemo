@@ -58,9 +58,7 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_pearson, s_pearson):
 
-        loss_stage = [self.loss(i, j) for i, j in zip(t_pearson, s_pearson)]
-        factor = F.softmax(torch.Tensor(loss_stage), dim=-1)
-        loss = sum(factor[index] * loss_stage[index] for index, value in enumerate(loss_stage))
+        loss = sum(self.loss(i, j) for i, j in zip(t_pearson, s_pearson))
 
         return loss
 
