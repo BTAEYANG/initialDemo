@@ -42,16 +42,23 @@ class SKD(nn.Module):
 class SKD_Loss(nn.Module):
     """ Stage Relation Distilling Loss"""
 
-    def __init__(self):
+    def __init__(self, loss):
         super(SKD_Loss, self).__init__()
-        # self.huber = nn.HuberLoss()
-        # self.smoothL1 = nn.SmoothL1Loss()
-        # self.mse = nn.MSELoss()
-        self.l1 = nn.L1Loss()
+
+        loss_type = loss
+
+        if loss_type == 'SmoothL1':
+            self.loss = nn.SmoothL1Loss()
+        elif loss_type == 'MSE':
+            self.loss = nn.MSELoss()
+        elif loss_type == 'Huber':
+            self.loss = nn.HuberLoss()
+        elif loss_type == 'L1':
+            self.loss = nn.L1Loss()
 
     def forward(self, t_pearson, s_pearson):
 
-        loss_stage = [self.l1(i, j) for i, j in zip(t_pearson, s_pearson)]
+        loss_stage = [self.loss(i, j) for i, j in zip(t_pearson, s_pearson)]
         factor = F.softmax(torch.Tensor(loss_stage), dim=-1)
         loss = sum(factor[index] * loss_stage[index] for index, value in enumerate(loss_stage))
 
