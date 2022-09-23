@@ -42,24 +42,17 @@ class SKD(nn.Module):
 
     @staticmethod
     def sample_pearson(f):
-
+        avg_pool = nn.AdaptiveAvgPool2d(1)
         for i in range(len(f)):
-            f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
+            f[i] = avg_pool(f[i].mean(dim=1, keepdim=False).unsqueeze(0)).squeeze(2)
 
         sample_matrix_list = []
         for i in range(len(f) - 1):
-            sample_matrix_list.append((torch.bmm(f[i].transpose(1, 2), f[i + 1])))
+            sample_matrix_list.append((torch.bmm(f[i], f[i + 1].transpose(1, 2)).squeeze(0)))
 
         sample_pearson_list = []
-        bs, h, w = sample_matrix_list[0].shape
         for m in sample_matrix_list:
-            for i in torch.chunk(m, chunks=bs, dim=0):
-                i = i.mean(dim=0, keepdim=False)
-                if i.shape[0] == i.shape[1]:
-                    sample_pearson_list.append(torch.corrcoef(i))
-                else:
-                    sample_pearson_list.append(torch.corrcoef(i))
-                    sample_pearson_list.append(torch.corrcoef(i.t()))
+            sample_pearson_list.append(torch.corrcoef(m))
 
         return sample_pearson_list
 
@@ -88,7 +81,8 @@ class SKD_Loss(nn.Module):
 
         total_stage_loss = stage_loss + sample_stage_loss
 
-        loss = (stage_loss * (sample_stage_loss / total_stage_loss)) + (sample_stage_loss * (stage_loss / total_stage_loss))
+        loss = (stage_loss * (sample_stage_loss / total_stage_loss)) + (
+                    sample_stage_loss * (stage_loss / total_stage_loss))
 
         return loss
 
