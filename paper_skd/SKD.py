@@ -48,7 +48,7 @@ class SKD(nn.Module):
 
         sample_matrix_list = []
         for i in range(len(f) - 1):
-            sample_matrix_list.append(f[i] @ (f[i + 1].transpose(0, 1)))
+            sample_matrix_list.append(f[i] @ f[i + 1].t())
 
         sample_pearson_list = []
         for m in sample_matrix_list:
