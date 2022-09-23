@@ -44,11 +44,11 @@ class SKD(nn.Module):
     def sample_pearson(f):
         avg_pool = nn.AdaptiveAvgPool2d(1)
         for i in range(len(f)):
-            f[i] = avg_pool(f[i].mean(dim=1, keepdim=False).unsqueeze(0)).squeeze(2)
+            f[i] = avg_pool((f[i].mean(dim=1, keepdim=False)).unsqueeze(0)).squeeze(0).squeeze(1)
 
         sample_matrix_list = []
         for i in range(len(f) - 1):
-            sample_matrix_list.append(torch.bmm(f[i], f[i + 1].transpose(1, 2)).squeeze(0))
+            sample_matrix_list.append(f[i] @ (f[i + 1].transpose(0, 1)))
 
         sample_pearson_list = []
         for m in sample_matrix_list:
@@ -102,9 +102,3 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         s_sample_pearson = SKD.sample_pearson(s_feats[:-1])
-        t_sample_pearson = SKD.sample_pearson(t_feats[:-1])
-        s_stage_pearson = SKD.stage_pearson(s_feats[:-1])
-        t_stage_pearson = SKD.stage_pearson(t_feats[:-1])
-        loss_function = SKD_Loss('SmoothL1')
-        loss = loss_function(s_sample_pearson, t_sample_pearson, s_stage_pearson, t_stage_pearson)
-        print(loss)
