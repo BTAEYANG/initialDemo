@@ -11,15 +11,17 @@ class SKD(nn.Module):
         super(SKD, self).__init__()
 
     def forward(self, f_t, f_s):
-        s_pearson = self.cov_pearson(f_s)
+        s_stage_pearson = self.stage_pearson(f_s)
+        s_sample_pearson = self.sample_pearson(f_s)
 
         with torch.no_grad():
-            t_pearson = self.cov_pearson(f_t)
+            t_stage_pearson = self.stage_pearson(f_t)
+            t_sample_pearson = self.sample_pearson(f_t)
 
-        return t_pearson, s_pearson
+        return t_stage_pearson, s_stage_pearson, t_sample_pearson, s_sample_pearson
 
     @staticmethod
-    def cov_pearson(f):
+    def stage_pearson(f):
 
         for i in range(len(f)):
             f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
@@ -37,6 +39,29 @@ class SKD(nn.Module):
                 pearson_list.append(torch.corrcoef(m.t()))
 
         return pearson_list
+
+    @staticmethod
+    def sample_pearson(f):
+
+        for i in range(len(f)):
+            f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
+
+        sample_matrix_list = []
+        for i in range(len(f) - 1):
+            sample_matrix_list.append((torch.bmm(f[i].transpose(1, 2), f[i + 1])))
+
+        sample_pearson_list = []
+        bs, h, w = sample_matrix_list[0].shape
+        for m in sample_matrix_list:
+            for i in torch.chunk(m, chunks=bs, dim=0):
+                i = i.mean(dim=0, keepdim=False)
+                if i.shape[0] == i.shape[1]:
+                    sample_pearson_list.append(torch.corrcoef(i))
+                else:
+                    sample_pearson_list.append(torch.corrcoef(i))
+                    sample_pearson_list.append(torch.corrcoef(i.t()))
+
+        return sample_pearson_list
 
 
 class SKD_Loss(nn.Module):
@@ -56,9 +81,14 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_pearson, s_pearson):
+    def forward(self, t_stage_pearson, s_stage_pearson, t_sample_pearson, s_sample_pearson):
 
-        loss = sum(self.loss(i, j) for i, j in zip(t_pearson, s_pearson))
+        stage_loss = sum(self.loss(i, j) for i, j in zip(t_stage_pearson, s_stage_pearson))
+        sample_stage_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
+
+        total_loss = sum(stage_loss, sample_stage_loss)
+
+        loss = sum((stage_loss * (sample_stage_loss / total_loss)), (sample_stage_loss * (stage_loss / total_loss)))
 
         return loss
 
@@ -77,6 +107,4 @@ if __name__ == '__main__':
     t_feats, t_logit = t_net(x, is_feat=True, preact=True)
 
     with torch.no_grad():
-
-        SKD.cov_pearson(s_feats[:-1])
-
+        SKD.sample_pearson(s_feats[:-1])
