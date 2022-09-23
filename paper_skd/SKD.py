@@ -48,7 +48,7 @@ class SKD(nn.Module):
 
         sample_matrix_list = []
         for i in range(len(f) - 1):
-            sample_matrix_list.append((torch.bmm(f[i], f[i + 1].transpose(1, 2)).squeeze(0)))
+            sample_matrix_list.append(torch.bmm(f[i], f[i + 1].transpose(1, 2)).squeeze(0))
 
         sample_pearson_list = []
         for m in sample_matrix_list:
@@ -82,14 +82,14 @@ class SKD_Loss(nn.Module):
         total_stage_loss = stage_loss + sample_stage_loss
 
         loss = (stage_loss * (sample_stage_loss / total_stage_loss)) + (
-                    sample_stage_loss * (stage_loss / total_stage_loss))
+                sample_stage_loss * (stage_loss / total_stage_loss))
 
         return loss
 
 
 if __name__ == '__main__':
     pass
-    x = torch.randn(10, 3, 32, 32)
+    x = torch.randn(64, 3, 32, 32)
 
     b, _, _, _ = x.shape
 
@@ -97,8 +97,14 @@ if __name__ == '__main__':
 
     t_net = resnet32x4(num_classes=100)
 
-    s_feats, s_logit = s_net(x, is_feat=True, preact=True)
-    t_feats, t_logit = t_net(x, is_feat=True, preact=True)
+    s_feats, s_logit = s_net(x, is_feat=True, preact=False)
+    t_feats, t_logit = t_net(x, is_feat=True, preact=False)
 
     with torch.no_grad():
-        SKD.sample_pearson(s_feats[:-1])
+        s_sample_pearson = SKD.sample_pearson(s_feats[:-1])
+        t_sample_pearson = SKD.sample_pearson(t_feats[:-1])
+        s_stage_pearson = SKD.stage_pearson(s_feats[:-1])
+        t_stage_pearson = SKD.stage_pearson(t_feats[:-1])
+        loss_function = SKD_Loss('SmoothL1')
+        loss = loss_function(s_sample_pearson, t_sample_pearson, s_stage_pearson, t_stage_pearson)
+        print(loss)
