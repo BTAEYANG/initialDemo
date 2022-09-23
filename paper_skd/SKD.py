@@ -86,9 +86,9 @@ class SKD_Loss(nn.Module):
         stage_loss = sum(self.loss(i, j) for i, j in zip(t_stage_pearson, s_stage_pearson))
         sample_stage_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
 
-        total_loss = sum(stage_loss, sample_stage_loss)
+        total_stage_loss = stage_loss + sample_stage_loss
 
-        loss = sum((stage_loss * (sample_stage_loss / total_loss)), (sample_stage_loss * (stage_loss / total_loss)))
+        loss = (stage_loss * (sample_stage_loss / total_stage_loss)) + (sample_stage_loss * (stage_loss / total_stage_loss))
 
         return loss
 
