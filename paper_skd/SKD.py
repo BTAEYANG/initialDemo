@@ -28,7 +28,6 @@ class SKD(nn.Module):
 
         temp_spatial = []
         for i in range(len(f)):
-            print(f"spatial: {f[i].shape}")
             temp_spatial.append(f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1))
 
         spatial_matrix_list = []
@@ -51,14 +50,10 @@ class SKD(nn.Module):
         temp_channel = []
 
         for i in range(len(f)):
-            print(f"channel: {f[i].shape}")
             temp_channel.append(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False))
-            print(f[i].shape)
 
         channel_matrix_list = []
         for j in range(len(temp_channel) - 1):
-            print(temp_channel[j].shape)
-            print(temp_channel[j + 1].shape)
             channel_matrix_list.append(torch.mm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
 
         pearson_list = []
