@@ -23,9 +23,9 @@ class SKD(nn.Module):
 
         # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson, t_sample_pearson, s_sample_pearson
         # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson
-        # return t_channel_pearson, s_channel_pearson
+        return t_channel_pearson, s_channel_pearson
         # return t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson
-        return t_sample_pearson, s_sample_pearson
+        # return t_sample_pearson, s_sample_pearson
 
     @staticmethod
     def stage_spatial_pearson(f):
@@ -104,13 +104,13 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_sample_pearson, s_sample_pearson):
+    def forward(self, t_channel_pearson, s_channel_pearson):
 
         # spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
 
-        # channel_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_channel_pearson, s_channel_pearson))
+        channel_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_channel_pearson, s_channel_pearson))
 
-        sample_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
+        # sample_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
 
         # loss = [spatial_pearson_loss, channel_pearson_loss, sample_pearson_loss]
 
@@ -119,7 +119,7 @@ class SKD_Loss(nn.Module):
         # factor = F.softmax(torch.Tensor(loss), dim=-1)
         # loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
 
-        return sample_pearson_loss
+        return channel_pearson_loss
 
 
 if __name__ == '__main__':
