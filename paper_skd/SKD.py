@@ -25,11 +25,7 @@ class SKD(nn.Module):
             # t_sample_relation, t_sample_pearson = self.stage_sample_pearson(f_t)
             t_sample_relation = self.stage_sample_pearson(f_t)
 
-        return t_spatial_pearson, s_spatial_pearson, t_channel_relation, s_channel_relation, t_sample_relation, s_sample_relation
-        # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson
-        # return s_sample_relation, t_sample_relation
-        # return t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson
-        # return t_sample_pearson, s_sample_pearson
+        return t_spatial_pearson, s_spatial_pearson, t_spatial_relation, s_spatial_relation, t_channel_relation, s_channel_relation, t_sample_relation, s_sample_relation
 
     @staticmethod
     def stage_spatial_pearson(f):
@@ -101,18 +97,23 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_spatial_pearson, s_spatial_pearson, t_channel_relation, s_channel_relation, t_sample_relation,
-                s_sample_relation):
+    def forward(self, t_spatial_pearson, s_spatial_pearson, t_spatial_relation, s_spatial_relation, t_channel_relation, s_channel_relation, t_sample_relation, s_sample_relation):
 
         spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
+
+        spatial_relation_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_relation, s_spatial_relation))
 
         channel_relation_loss = sum(self.loss(i, j) for i, j in zip(t_channel_relation, s_channel_relation))
 
         sample_relation_loss = sum(self.loss(i, j) for i, j in zip(t_sample_relation, s_sample_relation))
 
-        loss = [spatial_pearson_loss, channel_relation_loss, sample_relation_loss]
+        loss = [spatial_pearson_loss, spatial_relation_loss, channel_relation_loss, sample_relation_loss]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
-        loss_t = factor[0] * loss[0] + factor[1]*loss[2] + factor[2]*loss[1]
+
+        loss = sorted(loss)
+        factor = sorted(factor.tolist(), reverse=True)
+
+        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
 
         return loss_t
 
