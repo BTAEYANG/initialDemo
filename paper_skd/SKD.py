@@ -59,7 +59,7 @@ class SKD(nn.Module):
         for j in range(len(temp_channel) - 1):
             print(temp_channel[j].shape)
             print(temp_channel[j + 1].shape)
-            channel_matrix_list.append(torch.bmm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
+            channel_matrix_list.append(torch.mm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
 
         pearson_list = []
         for m in channel_matrix_list:
@@ -79,7 +79,7 @@ class SKD(nn.Module):
 
         sample_matrix_list = []
         for j in range(len(temp_sample) - 1):
-            sample_matrix_list.append(torch.bmm(temp_sample[j], temp_sample[j + 1].transpose(0, 1)))
+            sample_matrix_list.append(torch.mm(temp_sample[j], temp_sample[j + 1].transpose(0, 1)))
 
         pearson_list = []
         for m in sample_matrix_list:
