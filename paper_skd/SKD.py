@@ -15,7 +15,7 @@ class SKD(nn.Module):
         s_spatial_relation, s_spatial_pearson = self.stage_spatial_pearson(f_s)
         # s_channel_relation, s_channel_pearson = self.stage_channel_pearson(f_s)
         # s_channel_relation = self.stage_channel_pearson(f_s)
-        s_sample_relation, s_sample_pearson = self.stage_sample_pearson(f_s)
+        # s_sample_relation, s_sample_pearson = self.stage_sample_pearson(f_s)
         s_sample_relation = self.stage_sample_pearson(f_s)
 
         with torch.no_grad():
