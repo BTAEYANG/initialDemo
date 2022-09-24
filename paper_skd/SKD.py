@@ -14,18 +14,20 @@ class SKD(nn.Module):
 
         s_spatial_relation, s_spatial_pearson = self.stage_spatial_pearson(f_s)
         # s_channel_relation, s_channel_pearson = self.stage_channel_pearson(f_s)
-        s_channel_relation = self.stage_channel_pearson(f_s)
+        # s_channel_relation = self.stage_channel_pearson(f_s)
         s_sample_relation, s_sample_pearson = self.stage_sample_pearson(f_s)
+        s_sample_relation = self.stage_sample_pearson(f_s)
 
         with torch.no_grad():
             t_spatial_relation, t_spatial_pearson = self.stage_spatial_pearson(f_t)
             # t_channel_relation, t_channel_pearson = self.stage_channel_pearson(f_t)
-            t_channel_relation = self.stage_channel_pearson(f_t)
-            t_sample_relation, t_sample_pearson = self.stage_sample_pearson(f_t)
+            # t_channel_relation = self.stage_channel_pearson(f_t)
+            # t_sample_relation, t_sample_pearson = self.stage_sample_pearson(f_t)
+            t_sample_relation = self.stage_sample_pearson(f_t)
 
         # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson, t_sample_pearson, s_sample_pearson
         # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson
-        return s_channel_relation, t_channel_relation
+        return s_sample_relation, t_sample_relation
         # return t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson
         # return t_sample_pearson, s_sample_pearson
 
@@ -83,11 +85,11 @@ class SKD(nn.Module):
         for j in range(len(temp_sample) - 1):
             sample_matrix_list.append(torch.mm(temp_sample[j], temp_sample[j + 1].transpose(0, 1)))
 
-        pearson_list = []
-        for m in sample_matrix_list:
-            pearson_list.append(torch.corrcoef(m))
+        # pearson_list = []
+        # for m in sample_matrix_list:
+        #     pearson_list.append(torch.corrcoef(m))
 
-        return sample_matrix_list, pearson_list
+        return sample_matrix_list
 
 
 class SKD_Loss(nn.Module):
