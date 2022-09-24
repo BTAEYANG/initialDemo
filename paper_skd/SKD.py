@@ -31,19 +31,19 @@ class SKD(nn.Module):
             print(f"spatial: {f[i].shape}")
             temp_spatial.append(f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1))
 
-        matrix_list = []
+        spatial_matrix_list = []
         for j in range(len(temp_spatial) - 1):
-            matrix_list.append((torch.bmm(temp_spatial[j].transpose(1, 2), temp_spatial[j + 1])).mean(dim=0, keepdim=False))
+            spatial_matrix_list.append((torch.bmm(temp_spatial[j].transpose(1, 2), temp_spatial[j + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
-        for m in matrix_list:
+        for m in spatial_matrix_list:
             if m.shape[0] == m.shape[1]:
                 pearson_list.append(torch.corrcoef(m))
             else:
                 pearson_list.append(torch.corrcoef(m))
                 pearson_list.append(torch.corrcoef(m.t()))
 
-        return matrix_list, pearson_list
+        return spatial_matrix_list, pearson_list
 
     @staticmethod
     def stage_channel_pearson(f):
@@ -52,20 +52,20 @@ class SKD(nn.Module):
 
         for i in range(len(f)):
             print(f"channel: {f[i].shape}")
-            temp_channel.append(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(0))
+            temp_channel.append(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False))
             print(f[i].shape)
 
-        matrix_list = []
+        channel_matrix_list = []
         for j in range(len(temp_channel) - 1):
             print(temp_channel[j].shape)
             print(temp_channel[j + 1].shape)
-            matrix_list.append(torch.bmm(temp_channel[j].transpose(1, 2), temp_channel[j + 1]).mean(dim=0, keepdim=False))
+            channel_matrix_list.append(torch.bmm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
 
         pearson_list = []
-        for m in matrix_list:
+        for m in channel_matrix_list:
             pearson_list.append(torch.corrcoef(m))
 
-        return matrix_list, pearson_list
+        return channel_matrix_list, pearson_list
 
     @staticmethod
     def stage_sample_pearson(f):
@@ -75,17 +75,17 @@ class SKD(nn.Module):
         for i in range(len(f)):
             temp_sample.append(torch.stack(
                 torch.split((f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False)),
-                            split_size_or_sections=1, dim=0)).unsqueeze(0))
+                            split_size_or_sections=1, dim=0)))
 
-        matrix_list = []
+        sample_matrix_list = []
         for j in range(len(temp_sample) - 1):
-            matrix_list.append(torch.bmm(temp_sample[j], temp_sample[j + 1].transpose(1, 2)).mean(dim=0, keepdim=False))
+            sample_matrix_list.append(torch.bmm(temp_sample[j], temp_sample[j + 1].transpose(0, 1)))
 
         pearson_list = []
-        for m in matrix_list:
+        for m in sample_matrix_list:
             pearson_list.append(torch.corrcoef(m))
 
-        return matrix_list, pearson_list
+        return sample_matrix_list, pearson_list
 
 
 class SKD_Loss(nn.Module):
@@ -128,17 +128,17 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    # pass
-    x = torch.randn(64, 3, 32, 32)
-
-    b, _, _, _ = x.shape
-
-    s_net = resnet8x4(num_classes=100)
-
-    t_net = resnet32x4(num_classes=100)
-
-    s_feats, s_logit = s_net(x, is_feat=True, preact=False)
-    t_feats, t_logit = t_net(x, is_feat=True, preact=False)
-
-    with torch.no_grad():
-        s_sample_pearson = SKD.stage_channel_pearson(s_feats[:-1])
+    pass
+    # x = torch.randn(64, 3, 32, 32)
+    #
+    # b, _, _, _ = x.shape
+    #
+    # s_net = resnet8x4(num_classes=100)
+    #
+    # t_net = resnet32x4(num_classes=100)
+    #
+    # s_feats, s_logit = s_net(x, is_feat=True, preact=False)
+    # t_feats, t_logit = t_net(x, is_feat=True, preact=False)
+    #
+    # with torch.no_grad():
+    #     s_sample_pearson = SKD.stage_channel_pearson(s_feats[:-1])
