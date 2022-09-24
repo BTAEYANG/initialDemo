@@ -12,8 +12,8 @@ class SKD(nn.Module):
 
     def forward(self, f_t, f_s):
 
-        spatial_f_t, channel_f_t, sample_f_t = f_t, f_t, f_t
-        spatial_f_s, channel_f_s, sample_f_s = f_s, f_s, f_s
+        spatial_f_t, channel_f_t, sample_f_t = f_t.clone(), f_t.clone(), f_t.clone()
+        spatial_f_s, channel_f_s, sample_f_s = f_s.clone(), f_s.clone(), f_s.clone()
 
         s_spatial_relation, s_spatial_pearson = self.stage_spatial_pearson(spatial_f_s)
         s_channel_relation, s_channel_pearson = self.stage_channel_pearson(channel_f_s)
