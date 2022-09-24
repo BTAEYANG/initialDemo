@@ -14,20 +14,20 @@ class SKD(nn.Module):
 
         s_spatial_relation, s_spatial_pearson = self.stage_spatial_pearson(f_s)
         # s_channel_relation, s_channel_pearson = self.stage_channel_pearson(f_s)
-        # s_channel_relation = self.stage_channel_pearson(f_s)
+        s_channel_relation = self.stage_channel_pearson(f_s)
         # s_sample_relation, s_sample_pearson = self.stage_sample_pearson(f_s)
         s_sample_relation = self.stage_sample_pearson(f_s)
 
         with torch.no_grad():
             t_spatial_relation, t_spatial_pearson = self.stage_spatial_pearson(f_t)
             # t_channel_relation, t_channel_pearson = self.stage_channel_pearson(f_t)
-            # t_channel_relation = self.stage_channel_pearson(f_t)
+            t_channel_relation = self.stage_channel_pearson(f_t)
             # t_sample_relation, t_sample_pearson = self.stage_sample_pearson(f_t)
             t_sample_relation = self.stage_sample_pearson(f_t)
 
-        # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson, t_sample_pearson, s_sample_pearson
+        return t_spatial_pearson, s_spatial_pearson, t_channel_relation, s_channel_relation, t_sample_relation, s_sample_relation
         # return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson
-        return s_sample_relation, t_sample_relation
+        # return s_sample_relation, t_sample_relation
         # return t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson
         # return t_sample_pearson, s_sample_pearson
 
@@ -40,7 +40,8 @@ class SKD(nn.Module):
 
         spatial_matrix_list = []
         for j in range(len(temp_spatial) - 1):
-            spatial_matrix_list.append((torch.bmm(temp_spatial[j].transpose(1, 2), temp_spatial[j + 1])).mean(dim=0, keepdim=False))
+            spatial_matrix_list.append(
+                (torch.bmm(temp_spatial[j].transpose(1, 2), temp_spatial[j + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in spatial_matrix_list:
@@ -64,11 +65,6 @@ class SKD(nn.Module):
         for j in range(len(temp_channel) - 1):
             channel_matrix_list.append(torch.mm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
 
-        # pearson_list = []
-        # for m in channel_matrix_list:
-        #     pearson_list.append(torch.corrcoef(m))
-
-        # return channel_matrix_list, pearson_list
         return channel_matrix_list
 
     @staticmethod
@@ -84,10 +80,6 @@ class SKD(nn.Module):
         sample_matrix_list = []
         for j in range(len(temp_sample) - 1):
             sample_matrix_list.append(torch.mm(temp_sample[j], temp_sample[j + 1].transpose(0, 1)))
-
-        # pearson_list = []
-        # for m in sample_matrix_list:
-        #     pearson_list.append(torch.corrcoef(m))
 
         return sample_matrix_list
 
@@ -109,26 +101,20 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_channel_pearson, s_channel_pearson):
+    def forward(self, t_spatial_pearson, s_spatial_pearson, t_channel_relation, s_channel_relation, t_sample_relation,
+                s_sample_relation):
 
-        # for i, j in zip(t_channel_pearson, s_channel_pearson):
-        #     print(i.shape, i)
-        #     print(j.shape, j)
+        spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
 
-        # spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
+        channel_relation_loss = sum(self.loss(i, j) for i, j in zip(t_channel_relation, s_channel_relation))
 
-        channel_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_channel_pearson, s_channel_pearson))
+        sample_relation_loss = sum(self.loss(i, j) for i, j in zip(t_sample_relation, s_sample_relation))
 
-        # sample_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
+        loss = [spatial_pearson_loss, channel_relation_loss, sample_relation_loss]
+        factor = F.softmax(torch.Tensor(loss), dim=-1)
+        loss_t = factor[0] * loss[0] + factor[1]*loss[2] + factor[2]*loss[1]
 
-        # loss = [spatial_pearson_loss, channel_pearson_loss, sample_pearson_loss]
-
-        # loss = [spatial_pearson_loss, channel_pearson_loss]
-        #
-        # factor = F.softmax(torch.Tensor(loss), dim=-1)
-        # loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
-
-        return channel_pearson_loss
+        return loss_t
 
 
 if __name__ == '__main__':
