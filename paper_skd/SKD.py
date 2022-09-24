@@ -30,7 +30,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append((torch.bmm(f[i].transpose(1, 2).contiguous(), f[i + 1])).mean(dim=0, keepdim=False))
+            matrix_list.append((torch.bmm(f[i].permute(1, 2).contiguous(), f[i + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -49,7 +49,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(f[i].transpose(0, 1).contiguous(), f[i + 1]))
+            matrix_list.append(torch.mm(f[i].permute(0, 1).contiguous(), f[i + 1]))
 
         pearson_list = []
         for m in matrix_list:
@@ -64,7 +64,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(f[i], f[i + 1].transpose(0, 1).contiguous()))
+            matrix_list.append(torch.mm(f[i], f[i + 1].permute(0, 1).contiguous()))
 
         pearson_list = []
         for m in matrix_list:
@@ -110,17 +110,17 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    pass
-    # x = torch.randn(64, 3, 32, 32)
-    #
-    # b, _, _, _ = x.shape
-    #
-    # s_net = resnet8x4(num_classes=100)
-    #
-    # t_net = resnet32x4(num_classes=100)
-    #
-    # s_feats, s_logit = s_net(x, is_feat=True, preact=False)
-    # t_feats, t_logit = t_net(x, is_feat=True, preact=False)
-    #
-    # with torch.no_grad():
-    #     s_sample_pearson = SKD.stage_sample_pearson(s_feats[:-1])
+    # pass
+    x = torch.randn(64, 3, 32, 32)
+
+    b, _, _, _ = x.shape
+
+    s_net = resnet8x4(num_classes=100)
+
+    t_net = resnet32x4(num_classes=100)
+
+    s_feats, s_logit = s_net(x, is_feat=True, preact=False)
+    t_feats, t_logit = t_net(x, is_feat=True, preact=False)
+
+    with torch.no_grad():
+        s_sample_pearson = SKD.stage_sample_pearson(s_feats[:-1])
