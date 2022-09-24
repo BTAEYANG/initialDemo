@@ -45,6 +45,7 @@ class SKD(nn.Module):
     @staticmethod
     def stage_channel_pearson(f):
         for i in range(len(f)):
+            print(f[i].shape)
             f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(0)
             print(f[i].shape)
 
