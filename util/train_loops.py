@@ -116,8 +116,8 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             f_t, f_s, g_t, g_s, se_g_t, se_g_s = module_list[1](feat_t, feat_s, error_index)
             loss_kd = criterion_kd(f_t, f_s, g_t, g_s, se_g_t, se_g_s)
         elif opt.distill == 'SKD':
-            t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson = module_list[1](feat_t[:-1], feat_s[:-1])
-            loss_kd = criterion_kd(t_spatial_pearson, s_spatial_pearson, t_sample_pearson, s_sample_pearson)
+            t_sample_pearson, s_sample_pearson = module_list[1](feat_t[:-1], feat_s[:-1])
+            loss_kd = criterion_kd(t_sample_pearson, s_sample_pearson)
         else:
             raise NotImplementedError(opt.distill)
 
