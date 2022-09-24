@@ -11,6 +11,7 @@ class SKD(nn.Module):
         super(SKD, self).__init__()
 
     def forward(self, f_t, f_s):
+
         spatial_f_t, channel_f_t, sample_f_t = f_t, f_t, f_t
         spatial_f_s, channel_f_s, sample_f_s = f_s, f_s, f_s
 
@@ -29,6 +30,7 @@ class SKD(nn.Module):
     def stage_spatial_pearson(f):
 
         for i in range(len(f)):
+            print(f"spatial: {f[i].shape}")
             f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
 
         matrix_list = []
@@ -47,8 +49,9 @@ class SKD(nn.Module):
 
     @staticmethod
     def stage_channel_pearson(f):
+
         for i in range(len(f)):
-            print(f[i].shape)
+            print(f"channel: {f[i].shape}")
             f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(0)
             print(f[i].shape)
 
