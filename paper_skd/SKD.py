@@ -29,8 +29,8 @@ class SKD(nn.Module):
             f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
 
         matrix_list = []
-        for i in range(len(f) - 1):
-            matrix_list.append((torch.bmm(torch.transpose(f[i], 1, 2), f[i + 1])).mean(dim=0, keepdim=False))
+        for j in range(len(f) - 1):
+            matrix_list.append((torch.bmm(torch.transpose(f[j], 1, 2), f[j + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -48,8 +48,8 @@ class SKD(nn.Module):
             f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False)
 
         matrix_list = []
-        for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(torch.transpose(f[i], 0, 1), f[i + 1]))
+        for j in range(len(f) - 1):
+            matrix_list.append(torch.mm(torch.transpose(f[j], 0, 1), f[j + 1]))
 
         pearson_list = []
         for m in matrix_list:
@@ -65,8 +65,8 @@ class SKD(nn.Module):
                             split_size_or_sections=1, dim=0))
 
         matrix_list = []
-        for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(f[i], torch.transpose(f[i + 1], 0, 1)))
+        for j in range(len(f) - 1):
+            matrix_list.append(torch.mm(f[j], torch.transpose(f[j + 1], 0, 1)))
 
         pearson_list = []
         for m in matrix_list:
@@ -128,4 +128,4 @@ if __name__ == '__main__':
     t_feats, t_logit = t_net(x, is_feat=True, preact=False)
 
     with torch.no_grad():
-        s_sample_pearson = SKD.stage_sample_pearson(s_feats[:-1])
+        s_sample_pearson = SKD.stage_channel_pearson(s_feats[:-1])
