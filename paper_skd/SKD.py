@@ -60,7 +60,7 @@ class SKD(nn.Module):
     @staticmethod
     def stage_sample_pearson(f):
         for i in range(len(f)):
-            f[i] = torch.stack(torch.split(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False), split_size_or_sections=1, dim=0))
+            f[i] = torch.stack(torch.split((f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False)), split_size_or_sections=1, dim=0))
 
         matrix_list = []
         for i in range(len(f) - 1):
