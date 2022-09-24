@@ -107,13 +107,15 @@ class SKD_Loss(nn.Module):
 
         sample_relation_loss = sum(self.loss(i, j) for i, j in zip(t_sample_relation, s_sample_relation))
 
-        loss = [spatial_pearson_loss, spatial_relation_loss, channel_relation_loss, sample_relation_loss]
-        factor = F.softmax(torch.Tensor(loss), dim=-1)
+        relation_loss = [spatial_relation_loss, channel_relation_loss, sample_relation_loss]
+        factor = F.softmax(torch.Tensor(relation_loss), dim=-1)
 
-        loss = sorted(loss)
+        loss = sorted(relation_loss)
         factor = sorted(factor.tolist(), reverse=True)
 
-        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
+        relation_loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
+
+        loss_t = spatial_pearson_loss + relation_loss_t
 
         return loss_t
 
