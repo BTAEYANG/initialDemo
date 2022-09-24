@@ -21,7 +21,7 @@ class SKD(nn.Module):
             t_channel_relation, t_channel_pearson = self.stage_channel_pearson(f_t)
             t_sample_relation, t_sample_pearson = self.stage_sample_pearson(f_t)
 
-        return t_spatial_pearson, s_spatial_pearson, t_spatial_relation, s_spatial_relation, t_channel_pearson, s_channel_pearson, t_channel_relation, s_channel_relation, t_sample_pearson, s_sample_pearson, t_sample_relation, s_sample_relation
+        return t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson, t_sample_pearson, s_sample_pearson
 
     @staticmethod
     def stage_spatial_pearson(f):
@@ -100,21 +100,15 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_spatial_pearson, s_spatial_pearson, t_spatial_relation, s_spatial_relation, t_channel_pearson,
-                s_channel_pearson, t_channel_relation, s_channel_relation, t_sample_pearson, s_sample_pearson,
-                t_sample_relation, s_sample_relation):
+    def forward(self, t_spatial_pearson, s_spatial_pearson, t_channel_pearson, s_channel_pearson, t_sample_pearson, s_sample_pearson):
 
         spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
-        spatial_relation_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_relation, s_spatial_relation))
 
         channel_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_channel_pearson, s_channel_pearson))
-        channel_relation_loss = sum(self.loss(i, j) for i, j in zip(t_channel_relation, s_channel_relation))
 
         sample_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_sample_pearson, s_sample_pearson))
-        sample_relation_loss = sum(self.loss(i, j) for i, j in zip(t_sample_relation, s_sample_relation))
 
-        loss = [spatial_pearson_loss, spatial_relation_loss, channel_pearson_loss, channel_relation_loss,
-                sample_pearson_loss, sample_relation_loss]
+        loss = [spatial_pearson_loss, channel_pearson_loss, sample_pearson_loss]
 
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
