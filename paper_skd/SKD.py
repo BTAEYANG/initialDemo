@@ -107,8 +107,8 @@ class SKD_Loss(nn.Module):
     def forward(self, t_channel_pearson, s_channel_pearson):
 
         for i, j in zip(t_channel_pearson, s_channel_pearson):
-            print(i.shape)
-            print(j.shape)
+            print(i.shape, i)
+            print(j.shape, j)
 
         # spatial_pearson_loss = sum(self.loss(i, j) for i, j in zip(t_spatial_pearson, s_spatial_pearson))
 
