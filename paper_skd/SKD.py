@@ -30,7 +30,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append((torch.bmm(f[i].transpose(1, 2).contiguous(), f[i + 1])).mean(dim=0, keepdim=False))
+            matrix_list.append((torch.bmm(f[i].transpose(1, 2), f[i + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -49,7 +49,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(f[i].transpose(-1, 0).contiguous(), f[i + 1]))
+            matrix_list.append(torch.mm(torch.t(f[i]), f[i + 1]))
 
         pearson_list = []
         for m in matrix_list:
@@ -64,7 +64,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for i in range(len(f) - 1):
-            matrix_list.append(torch.mm(f[i], f[i + 1].transpose(-1, 0).contiguous()))
+            matrix_list.append(torch.mm(f[i], torch.t(f[i + 1])))
 
         pearson_list = []
         for m in matrix_list:
