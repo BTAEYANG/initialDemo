@@ -60,7 +60,7 @@ class SKD(nn.Module):
     @staticmethod
     def stage_sample_pearson(f):
         for i in range(len(f)):
-            f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(1)
+            f[i] = torch.stack(torch.split(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False), split_size_or_sections=1, dim=0))
 
         matrix_list = []
         for i in range(len(f) - 1):
@@ -110,17 +110,17 @@ class SKD_Loss(nn.Module):
 
 
 if __name__ == '__main__':
-    pass
-    # x = torch.randn(64, 3, 32, 32)
-    #
-    # b, _, _, _ = x.shape
-    #
-    # s_net = resnet8x4(num_classes=100)
-    #
-    # t_net = resnet32x4(num_classes=100)
-    #
-    # s_feats, s_logit = s_net(x, is_feat=True, preact=False)
-    # t_feats, t_logit = t_net(x, is_feat=True, preact=False)
-    #
-    # with torch.no_grad():
-    #     s_sample_pearson = SKD.stage_sample_relation(s_feats[:-1])
+    # pass
+    x = torch.randn(64, 3, 32, 32)
+
+    b, _, _, _ = x.shape
+
+    s_net = resnet8x4(num_classes=100)
+
+    t_net = resnet32x4(num_classes=100)
+
+    s_feats, s_logit = s_net(x, is_feat=True, preact=False)
+    t_feats, t_logit = t_net(x, is_feat=True, preact=False)
+
+    with torch.no_grad():
+        s_sample_pearson = SKD.stage_sample_pearson(s_feats[:-1])
