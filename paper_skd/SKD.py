@@ -30,7 +30,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for j in range(len(f) - 1):
-            matrix_list.append((torch.bmm(torch.transpose(f[j], 1, 2), f[j + 1])).mean(dim=0, keepdim=False))
+            matrix_list.append((torch.bmm(f[j].transpose(1, 2), f[j + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -49,7 +49,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for j in range(len(f) - 1):
-            matrix_list.append(torch.bmm(torch.transpose(f[j], 1, 2), f[j + 1]).squeeze(0))
+            matrix_list.append(torch.bmm(f[j].transpose(1, 2), f[j + 1]).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -66,7 +66,7 @@ class SKD(nn.Module):
 
         matrix_list = []
         for j in range(len(f) - 1):
-            matrix_list.append(torch.bmm(f[j], torch.transpose(f[j + 1], 1, 2)).squeeze(0))
+            matrix_list.append(torch.bmm(f[j], f[j + 1].transpose(1, 2)).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -128,4 +128,4 @@ if __name__ == '__main__':
     t_feats, t_logit = t_net(x, is_feat=True, preact=False)
 
     with torch.no_grad():
-        s_sample_pearson = SKD.stage_sample_pearson(s_feats[:-1])
+        s_sample_pearson = SKD.stage_channel_pearson(s_feats[:-1])
