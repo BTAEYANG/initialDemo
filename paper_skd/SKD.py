@@ -45,11 +45,11 @@ class SKD(nn.Module):
     @staticmethod
     def stage_channel_pearson(f):
         for i in range(len(f)):
-            f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False)
+            f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(2)
 
         matrix_list = []
         for j in range(len(f) - 1):
-            matrix_list.append(torch.mm(torch.transpose(f[j], 0, 1), f[j + 1]))
+            matrix_list.append(torch.mm(torch.transpose(f[j], 0, 1).squeeze(2), f[j + 1].squeeze(2)))
 
         pearson_list = []
         for m in matrix_list:
