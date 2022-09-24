@@ -60,11 +60,12 @@ class SKD(nn.Module):
         for j in range(len(temp_channel) - 1):
             channel_matrix_list.append(torch.mm(temp_channel[j].transpose(0, 1), temp_channel[j + 1]))
 
-        pearson_list = []
-        for m in channel_matrix_list:
-            pearson_list.append(torch.corrcoef(m))
+        # pearson_list = []
+        # for m in channel_matrix_list:
+        #     pearson_list.append(torch.corrcoef(m))
 
-        return channel_matrix_list, pearson_list
+        # return channel_matrix_list, pearson_list
+        return channel_matrix_list
 
     @staticmethod
     def stage_sample_pearson(f):
