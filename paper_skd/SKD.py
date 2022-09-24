@@ -26,13 +26,14 @@ class SKD(nn.Module):
     @staticmethod
     def stage_spatial_pearson(f):
 
+        temp_spatial = []
         for i in range(len(f)):
             print(f"spatial: {f[i].shape}")
-            f[i] = f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1)
+            temp_spatial.append(f[i].mean(dim=1, keepdim=False).view(f[i].shape[0], -1).unsqueeze(1))
 
         matrix_list = []
-        for j in range(len(f) - 1):
-            matrix_list.append((torch.bmm(f[j].transpose(1, 2), f[j + 1])).mean(dim=0, keepdim=False))
+        for j in range(len(temp_spatial) - 1):
+            matrix_list.append((torch.bmm(temp_spatial[j].transpose(1, 2), temp_spatial[j + 1])).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -47,16 +48,18 @@ class SKD(nn.Module):
     @staticmethod
     def stage_channel_pearson(f):
 
+        temp_channel = []
+
         for i in range(len(f)):
             print(f"channel: {f[i].shape}")
-            f[i] = f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(0)
+            temp_channel.append(f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).unsqueeze(0))
             print(f[i].shape)
 
         matrix_list = []
-        for j in range(len(f) - 1):
-            print(f[j].shape)
-            print(f[j + 1].shape)
-            matrix_list.append(torch.bmm(f[j].transpose(1, 2), f[j + 1]).mean(dim=0, keepdim=False))
+        for j in range(len(temp_channel) - 1):
+            print(temp_channel[j].shape)
+            print(temp_channel[j + 1].shape)
+            matrix_list.append(torch.bmm(temp_channel[j].transpose(1, 2), temp_channel[j + 1]).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
@@ -66,14 +69,17 @@ class SKD(nn.Module):
 
     @staticmethod
     def stage_sample_pearson(f):
+
+        temp_sample = []
+
         for i in range(len(f)):
-            f[i] = torch.stack(
+            temp_sample.append(torch.stack(
                 torch.split((f[i].mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False).mean(dim=-1, keepdim=False)),
-                            split_size_or_sections=1, dim=0)).unsqueeze(0)
+                            split_size_or_sections=1, dim=0)).unsqueeze(0))
 
         matrix_list = []
-        for j in range(len(f) - 1):
-            matrix_list.append(torch.bmm(f[j], f[j + 1].transpose(1, 2)).mean(dim=0, keepdim=False))
+        for j in range(len(temp_sample) - 1):
+            matrix_list.append(torch.bmm(temp_sample[j], temp_sample[j + 1].transpose(1, 2)).mean(dim=0, keepdim=False))
 
         pearson_list = []
         for m in matrix_list:
