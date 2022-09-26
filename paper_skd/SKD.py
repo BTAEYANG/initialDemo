@@ -75,8 +75,8 @@ class SKD_Loss(nn.Module):
         relation_loss = [b_loss, c_loss, w_loss, h_loss]
         factor = F.softmax(torch.Tensor(relation_loss), dim=-1)
 
-        # loss = sorted(relation_loss)
-        # factor = sorted(factor.tolist(), reverse=True)
+        loss = sorted(relation_loss)
+        factor = sorted(factor.tolist(), reverse=True)
 
         relation_loss_t = sum(factor[index] * relation_loss[index] for index, value in enumerate(relation_loss))
 
