@@ -97,10 +97,10 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         # ===================forward=====================
         preact = False
         # student model output : student feature map and student logit value
-        feat_s, logit_s = model_s(input, is_feat=True, preact=preact)
+        feat_s, logit_s = model_s(input, is_feat=True, preact=preact, feat_preact=True)
         with torch.no_grad():
             # teacher model output : teacher feature map and teacher logit value
-            feat_t, logit_t = model_t(input, is_feat=True, preact=preact)
+            feat_t, logit_t = model_t(input, is_feat=True, preact=preact, feat_preact=True)
             # 返回一个新的tensor，从当前计算图中分离下来的，但是仍指向原变量的存放位置,不同之处只是requires_grad为false，得到的这个tensor永远不需要计算其梯度，不具有grad
             feat_t = [f.detach() for f in feat_t]
 

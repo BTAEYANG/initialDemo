@@ -179,7 +179,7 @@ class ResNet(nn.Module):
 
         return [bn1, bn2, bn3]
 
-    def forward(self, x, is_feat=False, preact=False):
+    def forward(self, x, is_feat=False, preact=False, feat_preact=False):
         out = self.relu(self.bn1(self.conv1(x)))  # 32x32 第一个Conv2d
         f0 = out
 
@@ -199,7 +199,9 @@ class ResNet(nn.Module):
         out = self.fc(out)  # out
 
         if is_feat:
-            if preact:
+            if feat_preact:
+                return [f0, f1_pre, f1, f2_pre, f2, f3_pre, f3, f4], out
+            elif preact:
                 return [f0, f1_pre, f2_pre, f3_pre, f4], out
             else:
                 return [f0, f1, f2, f3, f4], out
