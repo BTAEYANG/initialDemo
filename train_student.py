@@ -122,8 +122,8 @@ def main():
     model_t.eval()
     model_s.eval()
 
-    feat_t, _ = model_t(data, is_feat=True, preact=False)
-    feat_s, _ = model_s(data, is_feat=True, preact=False)
+    feat_t, _ = model_t(data, is_feat=True, preact=False, feat_preact=True)
+    feat_s, _ = model_s(data, is_feat=True, preact=False, feat_preact=True)
 
     # init module list to add student model and teacher model or other model need by some kd methods
     module_list = nn.ModuleList([])
