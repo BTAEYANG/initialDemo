@@ -28,13 +28,13 @@ class SKD(nn.Module):
         # max feature channel
         _, max_c, h, w = feat_t[-1].shape
 
-        self.lat_layer = []
-        self.resize_layer = []
-        self.base_c = [32, 64, 128, 256]
+        self.lat_layer = nn.ModuleList([])
+        self.resize_layer = nn.ModuleList([])
+        base_c = [32, 64, 128, 256]
         for index, value in enumerate(feat_t):
             _, c, h, w = value.shape
-            self.resize_layer.append(add_conv(c, max(c, self.base_c[index]), 3, 1))
-            self.lat_layer.append(add_conv(max(c, self.base_c[index]), max_c, 3, 1))
+            self.resize_layer.append(add_conv(c, max(c, base_c[index]), 3, 1))
+            self.lat_layer.append(add_conv(max(c, base_c[index]), max_c, 3, 1))
 
         # se reduction = 16
         c = int(max_c)
