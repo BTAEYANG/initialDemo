@@ -26,11 +26,18 @@ class SKD(nn.Module):
         super(SKD, self).__init__()
 
         # max feature channel
-        _, max_c, h, w = feat_t[-1].shape
+        bs, max_t_c = feat_t[-1].shape
+
+        bs, max_s_c = feat_s[-1].shape
+
+        feat_t[-1] = feat_t[-1].view(bs, max_t_c, 1, 1)
+        feat_s[-1] = feat_s[-1].view(bs, max_s_c, 1, 1)
+
+        max_c = max(max_t_c, max_s_c)
 
         self.lat_layer = nn.ModuleList([])
         self.resize_layer = nn.ModuleList([])
-        base_c = [32, 64, 128, 256]
+        base_c = [32, 64, 128, 256, 512]
         for index, value in enumerate(feat_t):
             _, c, h, w = value.shape
             self.resize_layer.append(add_conv(c, max(c, base_c[index]), 3, 1))
@@ -43,6 +50,9 @@ class SKD(nn.Module):
 
         # feature pyramid smooth
         self.smooth = add_conv(max_c, max_c, 3, 1)
+
+        self.softmax_h = torch.nn.Softmax(dim=0)
+        self.softmax_w = torch.nn.Softmax(dim=1)
 
         if torch.cuda.is_available():
             self.resize_layer.cuda()
@@ -57,12 +67,16 @@ class SKD(nn.Module):
 
     def forward(self, f_t, f_s):
 
+        bs, max_t_c = f_t[-1].shape
+        bs, max_s_c = f_s[-1].shape
+
+        f_t[-1] = f_t[-1].view(bs, max_t_c, 1, 1)
+        f_s[-1] = f_s[-1].view(bs, max_s_c, 1, 1)
+
         # resnet110 resnet32: t0-16, t1-16, t2-32, t3-64  # resnet32x4 resnet8x4: t0-32, t1-64, t2-128, t3-256
         resize_ft = []
         resize_fs = []
         for i, v in enumerate(f_t):
-            print(v.shape)
-            print(self.resize_layer[i])
             resize_ft.append(self.resize_layer[i](v))
 
         for i, v in enumerate(f_s):
@@ -71,46 +85,82 @@ class SKD(nn.Module):
         t_p = []
         t_p_i = 0
         for j, ft in enumerate(resize_ft[::-1]):
-            if j == len(resize_ft):
-                t_p.append(self.lat_layer[j](ft))
+            if j == 0:
+                t_p.append(self.lat_layer[len(resize_ft) - j - 1](ft))
             else:
-                temp = self.lat_layer[j](ft)
-                t_p.append(self._upSample_add(t_p[t_p_i], temp))
+                temp = self.lat_layer[len(resize_ft) - j - 1](ft)
+                t_p.append(self.up_sample_add(t_p[t_p_i], temp))
                 t_p_i = t_p_i + 1
 
         s_p = []
         s_p_i = 0
         for j, st in enumerate(resize_fs[::-1]):
-            if j == len(resize_fs):
-                s_p.append(self.lat_layer[j](st))
+            if j == 0:
+                s_p.append(self.lat_layer[len(resize_fs) - j - 1](st))
             else:
-                temp = self.lat_layer[j](st)
-                s_p.append(self._upSample_add(s_p[s_p_i], temp))
+                temp = self.lat_layer[len(resize_fs) - j - 1](st)
+                s_p.append(self.up_sample_add(s_p[s_p_i], temp))
                 s_p_i = s_p_i + 1
 
         # 在得到相加后的特征后，利用3×3卷积对生成的P1至P3再进行融合，目的是消除上采样过程带来的重叠效应，以生成最终的特征图
-        g_t = [self.smooth(t) for t in t_p]
-        g_s = [self.smooth(s) for s in s_p]
+        p_t = [self.smooth(t) for t in t_p[::-1]]
+        p_s = [self.smooth(s) for s in s_p[::-1]]
 
-        se_g_t = [self.se(t) for t in g_t]
-        se_g_s = [self.se(s) for s in g_s]
+        # se_p_t = [self.se(t) for t in p_t]
+        # se_p_s = [self.se(s) for s in p_s]
 
-        return g_t, g_s, se_g_t, se_g_s
+        t_dot_product_l = []
+        t_dot_product_h_l = []
+        t_dot_product_w_l = []
+        t_pearson = []
+        t_pearson_h = []
+        t_pearson_w = []
 
-    # @staticmethod
-    # def stage_similarity_relation(f):
-    #
-    #     temp = []
-    #
-    #     for i in range(len(f)):
-    #         b, c, h, w = f[i].shape
-    #         # temp.append(f[i].mean(dim=1, keepdim=False).view(b, -1))
-    #
-    #     similarity_relation_list = []
-    #     for j in range(len(temp) - 1):
-    #         similarity_relation_list.append(temp[j].transpose(0, 1) @ temp[j + 1])
-    #
-    #     return similarity_relation_list
+        s_dot_product_l = []
+        s_dot_product_h_l = []
+        s_dot_product_w_l = []
+        s_pearson = []
+        s_pearson_h = []
+        s_pearson_w = []
+
+
+        for i, j, k, m in zip(f_t[:-1], p_t[:-1], f_s[:-1], p_s[:-1]):
+            t_dot_product = (i.mean(dim=1, keepdim=False).view(i.shape[0], -1)) @ (
+                j.mean(dim=1, keepdim=False).view(j.shape[0], -1).transpose(0, 1))
+
+            t_dot_product_h = self.softmax_h(t_dot_product) / t_dot_product.shape[0]
+            t_dot_product_w = self.softmax_w(t_dot_product) / t_dot_product.shape[1]
+
+            t_dot_product_l.append(t_dot_product)
+            t_dot_product_h_l.append(t_dot_product_h)
+            t_dot_product_w_l.append(t_dot_product_w)
+
+            t_pearson.append(torch.corrcoef(t_dot_product))
+            t_pearson_h.append(torch.corrcoef(t_dot_product_h))
+            t_pearson_w.append(torch.corrcoef(t_dot_product_w))
+
+            s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
+                m.mean(dim=1, keepdim=False).view(m.shape[0], -1).transpose(0, 1))
+
+            s_dot_product_h = self.softmax_h(s_dot_product) / s_dot_product.shape[0]
+            s_dot_product_w = self.softmax_w(s_dot_product) / s_dot_product.shape[1]
+
+            s_dot_product_l.append(s_dot_product)
+            s_dot_product_h_l.append(s_dot_product_h)
+            s_dot_product_w_l.append(s_dot_product_w)
+
+            s_pearson.append(torch.corrcoef(s_dot_product))
+            s_pearson_h.append(torch.corrcoef(s_dot_product_h))
+            s_pearson_w.append(torch.corrcoef(s_dot_product_w))
+
+
+        t_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l), torch.stack(t_pearson), torch.stack(t_pearson_h), torch.stack(t_pearson_w)]
+        s_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l), torch.stack(s_pearson), torch.stack(s_pearson_h), torch.stack(s_pearson_w)]
+
+        t_tensor = torch.stack(t_l)
+        s_tensor = torch.stack(s_l)
+
+        return t_tensor, s_tensor
 
 
 class SKD_Loss(nn.Module):
@@ -130,39 +180,30 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, g_t, g_s, se_g_t, se_g_s):
+    def forward(self, t_tensor, s_tensor):
 
-        g_loss = sum(self.loss(i, j) for i, j in zip(g_t, g_s))
-        g_se_loss = sum(self.loss(i, j) for i, j in zip(se_g_t, se_g_s))
+        loss = sum(self.loss(i, j) for i, j in zip(t_tensor, s_tensor))
 
-        # relation_loss = [b_loss, c_loss, w_loss, h_loss]
-        # factor = F.softmax(torch.Tensor(relation_loss), dim=-1)
-
-        # loss = sorted(relation_loss)
-        # factor = sorted(factor.tolist(), reverse=True)
-
-        relation_loss_t = g_loss + g_se_loss
-
-        return relation_loss_t
+        return loss
 
 
 if __name__ == '__main__':
     pass
-    x = torch.randn(2, 3, 32, 32)
+    data = torch.randn(2, 3, 32, 32)
+    x = torch.randn(64, 3, 32, 32)
 
     b, _, _, _ = x.shape
 
     s_net = resnet8x4(num_classes=100)
-
     t_net = resnet32x4(num_classes=100)
 
-    s_feats, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=False)
-    t_feats, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=False)
+    feat_t, _ = s_net(data, is_feat=True, preact=False, feat_preact=False)
+    feat_s, _ = t_net(data, is_feat=True, preact=False, feat_preact=False)
 
-    f_t = t_feats[:-1]
-    f_s = s_feats[:-1]
+    f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=False)
+    f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=False)
 
-    skd = SKD(f_t, f_s)
+    skd = SKD(feat_t, feat_s)
 
     with torch.no_grad():
         g_t, g_s, se_g_t, se_g_s = skd(f_t, f_s)
