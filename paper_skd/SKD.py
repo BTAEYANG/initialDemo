@@ -37,8 +37,9 @@ class SKD(nn.Module):
             self.lat_layer.append(add_conv(max(c, self.base_c[index]), max_c, 3, 1))
 
         # se reduction = 16
-        red = max_c ** 0.5
-        self.se = SELayer(max_c, reduction=red)
+        c = int(max_c)
+        red = int(max_c ** 0.5)
+        self.se = SELayer(channel=c, reduction=red)
 
         # feature pyramid smooth
         self.smooth = add_conv(max_c, max_c, 3, 1)
