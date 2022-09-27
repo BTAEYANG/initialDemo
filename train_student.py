@@ -62,7 +62,8 @@ def parse_option():
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
                                                                       'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
-    parser.add_argument('--loss', type=str, default='SmoothL1', help='train loss function')
+    parser.add_argument('--loss_dot', type=str, default='SmoothL1', help='train loss_dot function')
+    parser.add_argument('--loss_pearson', type=str, default='MSE', help='train loss_pearson function')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
     parser.add_argument('-a', '--alpha', type=float, default=5, help='weight balance for KD')
@@ -148,7 +149,7 @@ def main():
         skd = SKD(feat_t, feat_s)
         module_list.append(skd)
         trainable_list.append(skd)
-        criterion_kd = SKD_Loss(opt.loss)
+        criterion_kd = SKD_Loss(opt.loss_dot, opt.loss_pearson)
     else:
         raise NotImplementedError(opt.distill)
 

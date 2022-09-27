@@ -37,7 +37,7 @@ class SKD(nn.Module):
 
         self.lat_layer = nn.ModuleList([])
         self.resize_layer = nn.ModuleList([])
-        base_c = [32, 64, 128, 256, 512]
+        base_c = [32, 64, 128, 256, 256]
         for index, value in enumerate(feat_t):
             _, c, h, w = value.shape
             self.resize_layer.append(add_conv(c, max(c, base_c[index]), 3, 1))
@@ -142,8 +142,8 @@ class SKD(nn.Module):
             s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
                 m.mean(dim=1, keepdim=False).view(m.shape[0], -1).transpose(0, 1))
 
-            s_dot_product_h = self.softmax_h(s_dot_product) / s_dot_product.shape[0]
-            s_dot_product_w = self.softmax_w(s_dot_product) / s_dot_product.shape[1]
+            s_dot_product_h = self.softmax_h(s_dot_product) / ((s_dot_product.shape[0]) ** 2)
+            s_dot_product_w = self.softmax_w(s_dot_product) / ((s_dot_product.shape[1]) ** 2)
 
             s_dot_product_l.append(s_dot_product)
             s_dot_product_h_l.append(s_dot_product_h)
@@ -169,24 +169,31 @@ class SKD(nn.Module):
 class SKD_Loss(nn.Module):
     """ Stage Relation Distilling Loss"""
 
-    def __init__(self, loss):
+    def __init__(self, loss_dot, loss_pearson):
         super(SKD_Loss, self).__init__()
 
-        loss_type = loss
+        if loss_dot == 'SmoothL1':
+            self.loss_1 = nn.SmoothL1Loss()
+        elif loss_dot == 'MSE':
+            self.loss_1 = nn.MSELoss()
+        elif loss_dot == 'Huber':
+            self.loss_1 = nn.HuberLoss()
+        elif loss_dot == 'L1':
+            self.loss_1 = nn.L1Loss()
 
-        if loss_type == 'SmoothL1':
-            self.loss = nn.SmoothL1Loss()
-        elif loss_type == 'MSE':
-            self.loss = nn.MSELoss()
-        elif loss_type == 'Huber':
-            self.loss = nn.HuberLoss()
-        elif loss_type == 'L1':
-            self.loss = nn.L1Loss()
+        if loss_pearson == 'SmoothL1':
+            self.loss_2 = nn.SmoothL1Loss()
+        elif loss_pearson == 'MSE':
+            self.loss_2 = nn.MSELoss()
+        elif loss_pearson == 'Huber':
+            self.loss_2 = nn.HuberLoss()
+        elif loss_pearson == 'L1':
+            self.loss_2 = nn.L1Loss()
 
     def forward(self, t_dot_tensor, s_dot_tensor, t_pearson_tensor, s_pearson_tensor):
 
-        dot_loss = self.loss(t_dot_tensor, s_dot_tensor)
-        pearson_loss = self.loss(t_pearson_tensor, s_pearson_tensor)
+        dot_loss = self.loss_1(t_dot_tensor, s_dot_tensor)
+        pearson_loss = self.loss_2(t_pearson_tensor, s_pearson_tensor)
         loss = [dot_loss, pearson_loss]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
