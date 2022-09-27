@@ -154,13 +154,16 @@ class SKD(nn.Module):
             # s_pearson_w.append(torch.corrcoef(s_dot_product_w))
 
 
-        t_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l), torch.stack(t_pearson)]
-        s_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l), torch.stack(s_pearson)]
+        t_dot_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l)]
+        s_dot_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l)]
 
-        t_tensor = torch.stack(t_l)
-        s_tensor = torch.stack(s_l)
+        t_dot_tensor = torch.stack(t_dot_l)
+        s_dot_tensor = torch.stack(s_dot_l)
 
-        return t_tensor, s_tensor
+        t_pearson_tensor = torch.stack(t_pearson)
+        s_pearson_tensor = torch.stack(s_pearson)
+
+        return t_dot_tensor, s_dot_tensor, t_pearson_tensor, s_pearson_tensor
 
 
 class SKD_Loss(nn.Module):
@@ -180,11 +183,14 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_tensor, s_tensor):
+    def forward(self, t_dot_tensor, s_dot_tensor, t_pearson_tensor, s_pearson_tensor):
 
-        loss = self.loss(t_tensor, s_tensor)
-
-        return loss
+        dot_loss = self.loss(t_dot_tensor, s_dot_tensor)
+        pearson_loss = self.loss(t_pearson_tensor, s_pearson_tensor)
+        loss = [dot_loss, pearson_loss]
+        factor = F.softmax(torch.Tensor(loss), dim=-1)
+        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
+        return loss_t
 
 
 if __name__ == '__main__':
