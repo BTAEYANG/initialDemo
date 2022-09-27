@@ -53,6 +53,8 @@ class SKD(nn.Module):
         resize_ft = []
         resize_fs = []
         for i, v in enumerate(f_t):
+            print(self.resize_layer[i])
+            print(v)
             resize_ft.append(self.resize_layer[i](v))
 
         for i, v in enumerate(f_s):
