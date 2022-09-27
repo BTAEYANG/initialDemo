@@ -196,6 +196,7 @@ class SKD_Loss(nn.Module):
         pearson_loss = self.loss_2(t_pearson_tensor, s_pearson_tensor)
         loss = [dot_loss, pearson_loss]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
+        loss.reverse()
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
         return loss_t
 
