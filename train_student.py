@@ -145,7 +145,7 @@ def main():
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
     elif opt.distill == 'SKD':
-        skd = SKD()
+        skd = SKD(feat_t, feat_s)
         module_list.append(skd)
         trainable_list.append(skd)
         criterion_kd = SKD_Loss(opt.loss)
