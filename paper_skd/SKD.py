@@ -37,10 +37,16 @@ class SKD(nn.Module):
             self.lat_layer.append(add_conv(max(c, self.base_c[index]), max_c, 3, 1))
 
         # se reduction = 16
-        # self.se = SELayer(max_c, (max_c ** 0.5))
+        self.se = SELayer(max_c, (max_c ** 0.5))
 
         # feature pyramid smooth
         self.smooth = add_conv(max_c, max_c, 3, 1)
+
+        if torch.cuda.is_available():
+            self.resize_layer.cuda()
+            self.lat_layer.cuda()
+            self.smooth.cuda()
+            self.se.cuda()
 
     @staticmethod
     def up_sample_add(x, y):
