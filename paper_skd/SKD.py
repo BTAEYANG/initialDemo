@@ -32,13 +32,12 @@ class SKD(nn.Module):
         self.resize_layer = []
         self.base_c = [32, 64, 128, 256]
         for index, value in enumerate(feat_t):
-            print(index, value.shape)
             _, c, h, w = value.shape
             self.resize_layer.append(add_conv(c, max(c, self.base_c[index]), 3, 1))
             self.lat_layer.append(add_conv(max(c, self.base_c[index]), max_c, 3, 1))
 
         # se reduction = 16
-        self.se = SELayer(max_c, (max_c ** 0.5))
+        # self.se = SELayer(max_c, (max_c ** 0.5))
 
         # feature pyramid smooth
         self.smooth = add_conv(max_c, max_c, 3, 1)
