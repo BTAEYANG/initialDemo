@@ -136,8 +136,8 @@ class SKD(nn.Module):
             t_dot_product_w_l.append(t_dot_product_w)
 
             t_pearson.append(torch.corrcoef(t_dot_product))
-            t_pearson_h.append(torch.corrcoef(t_dot_product_h))
-            t_pearson_w.append(torch.corrcoef(t_dot_product_w))
+            # t_pearson_h.append(torch.corrcoef(t_dot_product_h))
+            # t_pearson_w.append(torch.corrcoef(t_dot_product_w))
 
             s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
                 m.mean(dim=1, keepdim=False).view(m.shape[0], -1).transpose(0, 1))
@@ -150,12 +150,12 @@ class SKD(nn.Module):
             s_dot_product_w_l.append(s_dot_product_w)
 
             s_pearson.append(torch.corrcoef(s_dot_product))
-            s_pearson_h.append(torch.corrcoef(s_dot_product_h))
-            s_pearson_w.append(torch.corrcoef(s_dot_product_w))
+            # s_pearson_h.append(torch.corrcoef(s_dot_product_h))
+            # s_pearson_w.append(torch.corrcoef(s_dot_product_w))
 
 
-        t_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l), torch.stack(t_pearson), torch.stack(t_pearson_h), torch.stack(t_pearson_w)]
-        s_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l), torch.stack(s_pearson), torch.stack(s_pearson_h), torch.stack(s_pearson_w)]
+        t_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l), torch.stack(t_pearson)]
+        s_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l), torch.stack(s_pearson)]
 
         t_tensor = torch.stack(t_l)
         s_tensor = torch.stack(s_l)
