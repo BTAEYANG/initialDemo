@@ -182,7 +182,7 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_tensor, s_tensor):
 
-        loss = sum(self.loss(i, j) for i, j in zip(t_tensor, s_tensor))
+        loss = self.loss(t_tensor, s_tensor)
 
         return loss
 
