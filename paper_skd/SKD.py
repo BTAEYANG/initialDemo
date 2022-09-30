@@ -53,6 +53,7 @@ class SKD(nn.Module):
 
         self.softmax_h = torch.nn.Softmax(dim=0)
         self.softmax_w = torch.nn.Softmax(dim=1)
+        self.softmax_spatial = torch.nn.Softmax2d()
 
         if torch.cuda.is_available():
             self.resize_layer.cuda()
@@ -106,23 +107,16 @@ class SKD(nn.Module):
         p_t = [self.smooth(t) for t in t_p[::-1]]
         p_s = [self.smooth(s) for s in s_p[::-1]]
 
-        # se_p_t = [self.se(t) for t in p_t]
-        # se_p_s = [self.se(s) for s in p_s]
+        se_p_t = [self.se(t) for t in p_t]
+        se_p_s = [self.se(s) for s in p_s]
 
         t_dot_product_l = []
         t_dot_product_h_l = []
         t_dot_product_w_l = []
-        t_pearson = []
-        t_pearson_h = []
-        t_pearson_w = []
 
         s_dot_product_l = []
         s_dot_product_h_l = []
         s_dot_product_w_l = []
-        s_pearson = []
-        s_pearson_h = []
-        s_pearson_w = []
-
 
         for i, j, k, m in zip(f_t[:-1], p_t[:-1], f_s[:-1], p_s[:-1]):
             t_dot_product = (i.mean(dim=1, keepdim=False).view(i.shape[0], -1)) @ (
@@ -131,28 +125,22 @@ class SKD(nn.Module):
             t_dot_product_h = self.softmax_h(t_dot_product) / t_dot_product.shape[0]
             t_dot_product_w = self.softmax_w(t_dot_product) / t_dot_product.shape[1]
 
+            t_dot_product = (self.softmax_spatial(t_dot_product.unsqueeze(0)) / ((t_dot_product.shape[1]) ** 2)).squeeze(0)
+
             t_dot_product_l.append(t_dot_product)
             t_dot_product_h_l.append(t_dot_product_h)
             t_dot_product_w_l.append(t_dot_product_w)
 
-            t_pearson.append(torch.corrcoef(t_dot_product))
-            # t_pearson_h.append(torch.corrcoef(t_dot_product_h))
-            # t_pearson_w.append(torch.corrcoef(t_dot_product_w))
-
             s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
                 m.mean(dim=1, keepdim=False).view(m.shape[0], -1).transpose(0, 1))
 
-            s_dot_product_h = self.softmax_h(s_dot_product) / ((s_dot_product.shape[0]) ** 2)
-            s_dot_product_w = self.softmax_w(s_dot_product) / ((s_dot_product.shape[1]) ** 2)
+            s_dot_product_h = self.softmax_h(s_dot_product) / s_dot_product.shape[0]
+            s_dot_product_w = self.softmax_w(s_dot_product) / s_dot_product.shape[1]
 
+            s_dot_product = (self.softmax_spatial(s_dot_product.unsqueeze(0)) / ((s_dot_product.shape[1]) ** 2)).squeeze(0)
             s_dot_product_l.append(s_dot_product)
             s_dot_product_h_l.append(s_dot_product_h)
             s_dot_product_w_l.append(s_dot_product_w)
-
-            s_pearson.append(torch.corrcoef(s_dot_product))
-            # s_pearson_h.append(torch.corrcoef(s_dot_product_h))
-            # s_pearson_w.append(torch.corrcoef(s_dot_product_w))
-
 
         t_dot_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l)]
         s_dot_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l)]
@@ -160,10 +148,7 @@ class SKD(nn.Module):
         t_dot_tensor = torch.stack(t_dot_l)
         s_dot_tensor = torch.stack(s_dot_l)
 
-        t_pearson_tensor = torch.stack(t_pearson)
-        s_pearson_tensor = torch.stack(s_pearson)
-
-        return t_dot_tensor, s_dot_tensor, t_pearson_tensor, s_pearson_tensor
+        return t_dot_tensor, s_dot_tensor
 
 
 class SKD_Loss(nn.Module):
@@ -190,15 +175,14 @@ class SKD_Loss(nn.Module):
         elif loss_pearson == 'L1':
             self.loss_2 = nn.L1Loss()
 
-    def forward(self, t_dot_tensor, s_dot_tensor, t_pearson_tensor, s_pearson_tensor):
+    def forward(self, t_dot_tensor, s_dot_tensor):
 
         dot_loss = self.loss_1(t_dot_tensor, s_dot_tensor)
-        pearson_loss = self.loss_2(t_pearson_tensor, s_pearson_tensor)
-        loss = [dot_loss, pearson_loss]
-        factor = F.softmax(torch.Tensor(loss), dim=-1)
-        loss.reverse()
-        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
-        return loss_t
+        # loss = [dot_loss, pearson_loss]
+        # factor = F.softmax(torch.Tensor(loss), dim=-1)
+        # loss.reverse()
+        # loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
+        return dot_loss
 
 
 if __name__ == '__main__':
