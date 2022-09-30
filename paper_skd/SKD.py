@@ -118,32 +118,67 @@ class SKD(nn.Module):
         s_dot_product_h_l = []
         s_dot_product_w_l = []
 
-        for i, j, k, m in zip(f_t[:-1], p_t[:-1], f_s[:-1], p_s[:-1]):
+        se_t_dot_product_l = []
+        se_t_dot_product_h_l = []
+        se_t_dot_product_w_l = []
+
+        se_s_dot_product_l = []
+        se_s_dot_product_h_l = []
+        se_s_dot_product_w_l = []
+
+        for i, j, k, m, w, q in zip(f_t[:-1], p_t[:-1], f_s[:-1], p_s[:-1], se_p_t[:-1], se_p_s[:-1]):
+
+            # f_t 与 p_t
             t_dot_product = (i.mean(dim=1, keepdim=False).view(i.shape[0], -1)) @ (
                 j.mean(dim=1, keepdim=False).view(j.shape[0], -1).transpose(0, 1))
 
             t_dot_product_h = self.softmax_h(t_dot_product) / t_dot_product.shape[0]
             t_dot_product_w = self.softmax_w(t_dot_product) / t_dot_product.shape[1]
-
             t_dot_product = (self.softmax_spatial(t_dot_product.unsqueeze(0)) / ((t_dot_product.shape[1]) ** 2)).squeeze(0)
 
             t_dot_product_l.append(t_dot_product)
             t_dot_product_h_l.append(t_dot_product_h)
             t_dot_product_w_l.append(t_dot_product_w)
 
+            # f_s 与 p_s
             s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
                 m.mean(dim=1, keepdim=False).view(m.shape[0], -1).transpose(0, 1))
 
             s_dot_product_h = self.softmax_h(s_dot_product) / s_dot_product.shape[0]
             s_dot_product_w = self.softmax_w(s_dot_product) / s_dot_product.shape[1]
-
             s_dot_product = (self.softmax_spatial(s_dot_product.unsqueeze(0)) / ((s_dot_product.shape[1]) ** 2)).squeeze(0)
+
             s_dot_product_l.append(s_dot_product)
             s_dot_product_h_l.append(s_dot_product_h)
             s_dot_product_w_l.append(s_dot_product_w)
 
-        t_dot_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l)]
-        s_dot_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l)]
+            # f_t 与 se_p_t
+            se_t_dot_product = (i.mean(dim=1, keepdim=False).view(i.shape[0], -1)) @ (
+                w.mean(dim=1, keepdim=False).view(w.shape[0], -1).transpose(0, 1))
+
+            se_t_dot_product_h = self.softmax_h(se_t_dot_product) / se_t_dot_product.shape[0]
+            se_t_dot_product_w = self.softmax_w(se_t_dot_product) / se_t_dot_product.shape[1]
+            se_t_dot_product = (self.softmax_spatial(se_t_dot_product.unsqueeze(0)) / ((se_t_dot_product.shape[1]) ** 2)).squeeze(0)
+
+            se_t_dot_product_l.append(se_t_dot_product)
+            se_t_dot_product_h_l.append(se_t_dot_product_h)
+            se_t_dot_product_w_l.append(se_t_dot_product_w)
+
+            # f_s 与 se_p_s
+            se_s_dot_product = (k.mean(dim=1, keepdim=False).view(k.shape[0], -1)) @ (
+                q.mean(dim=1, keepdim=False).view(q.shape[0], -1).transpose(0, 1))
+
+            se_s_dot_product_h = self.softmax_h(se_s_dot_product) / se_s_dot_product.shape[0]
+            se_s_dot_product_w = self.softmax_w(se_s_dot_product) / se_s_dot_product.shape[1]
+            se_s_dot_product = (self.softmax_spatial(se_s_dot_product.unsqueeze(0)) / (
+                        (se_s_dot_product.shape[1]) ** 2)).squeeze(0)
+
+            se_s_dot_product_l.append(se_s_dot_product)
+            se_s_dot_product_h_l.append(se_s_dot_product_h)
+            se_s_dot_product_w_l.append(se_s_dot_product_w)
+
+        t_dot_l = [torch.stack(t_dot_product_l), torch.stack(t_dot_product_h_l), torch.stack(t_dot_product_w_l), torch.stack(se_t_dot_product_l), torch.stack(se_t_dot_product_h_l), torch.stack(se_t_dot_product_w_l)]
+        s_dot_l = [torch.stack(s_dot_product_l), torch.stack(s_dot_product_h_l), torch.stack(s_dot_product_w_l), torch.stack(se_s_dot_product_l), torch.stack(se_s_dot_product_h_l), torch.stack(se_s_dot_product_w_l)]
 
         t_dot_tensor = torch.stack(t_dot_l)
         s_dot_tensor = torch.stack(s_dot_l)
