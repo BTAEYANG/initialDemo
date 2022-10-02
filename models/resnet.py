@@ -251,6 +251,8 @@ if __name__ == '__main__':
 
     net = resnet32x4(num_classes=100)
 
+    print(net)
+
     feats, logit = net(x, is_feat=True, preact=False, feat_preact=False)
     for f in feats:
         print(f.shape, f.min().item())
@@ -261,9 +263,3 @@ if __name__ == '__main__':
             print('pass')
         else:
             print('warning')
-
-    # x = torch.randn(10, 1024, 1024)
-    #
-    # mat = torch.cov(x)
-    #
-    # print(mat.shape)
