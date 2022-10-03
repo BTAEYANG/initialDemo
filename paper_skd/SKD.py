@@ -26,10 +26,13 @@ class SKD(nn.Module):
             # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
             self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=256))
 
+        self.t_fc_embedding = model_t.fc
+
         if torch.cuda.is_available():
             self.embedding_l.cuda()
+            self.t_fc_embedding.cuda()
 
-        self.fc_embedding = model_t.fc
+
 
     @staticmethod
     def compute_stage(g):
@@ -55,11 +58,11 @@ class SKD(nn.Module):
 
 
         with torch.no_grad():
-            for i in range(len(stage_list_t) - 1):
-                stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
+            for i in range(len(stage_list_t)):
+                stage_list_t[i] = self.t_fc_embedding(self.embedding_l[i](stage_list_t[i]))
 
-        for i in range(len(stage_list_t)-1):
-            stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
+        for i in range(len(stage_list_t)):
+            stage_list_s[i] = self.t_fc_embedding(self.embedding_l[i](stage_list_s[i]))
 
         return stage_list_t, stage_list_s
 
@@ -81,12 +84,10 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_embedding, s_embedding):
 
-        loss = []
-        for t, s in zip(t_embedding, s_embedding):
-            delta = torch.abs(t - s)
-            loss += torch.mean((delta[:-1] * delta[1:]).sum(1))
-
-        return loss
+        loss_l = [self.loss(t, s) for t, s in zip(t_embedding, s_embedding)]
+        factor = F.softmax(torch.Tensor(loss_l), dim=-1)
+        loss_t = sum(factor[index] * loss_l[index] for index, value in enumerate(loss_l))
+        return loss_t
 
 
 if __name__ == '__main__':
@@ -105,7 +106,9 @@ if __name__ == '__main__':
     # f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=False)
     # f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=False)
     #
-    # skd = SKD(feat_t[:-1], feat_s[:-1])
+    # skd = SKD(feat_t[:-1], feat_s[:-1], t_net)
     #
     # with torch.no_grad():
     #     fsp_list_t, fsp_list_s = skd(f_t[:-1], f_s[:-1])
+    #     loss = SKD_Loss('SmoothL1')
+    #     loss_val = loss(fsp_list_t, fsp_list_s)
