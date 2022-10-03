@@ -24,7 +24,7 @@ class SKD(nn.Module):
         self.embedding_l = nn.ModuleList([])
         for j in dim_in_l:
             # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
-            self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=256))
+            self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=dim_in_l[-1]))
 
         if torch.cuda.is_available():
             self.embedding_l.cuda()
