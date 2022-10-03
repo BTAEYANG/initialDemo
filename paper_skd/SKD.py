@@ -62,7 +62,10 @@ class SKD(nn.Module):
         for i in range(len(stage_list_t)):
             stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
 
-        return stage_list_t, stage_list_s
+        t_tensor = torch.stack(stage_list_t)
+        s_tensor = torch.stack(stage_list_s)
+
+        return t_tensor, s_tensor
 
 
 class SKD_Loss(nn.Module):
@@ -80,11 +83,12 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_embedding, s_embedding):
+    def forward(self, t_tensor, s_tensor):
 
-        loss_l = [self.loss(t, s) for t, s in zip(t_embedding, s_embedding)]
-        factor = F.softmax(torch.Tensor(loss_l), dim=-1)
-        loss_t = sum(factor[index] * loss_l[index] for index, value in enumerate(loss_l))
+        # loss_l = [self.loss(t, s) for t, s in zip(t_embedding, s_embedding)]
+        # factor = F.softmax(torch.Tensor(loss_l), dim=-1)
+        # loss_t = sum(factor[index] * loss_l[index] for index, value in enumerate(loss_l))
+        loss_t = self.loss(t_tensor, s_tensor)
         return loss_t
 
 
