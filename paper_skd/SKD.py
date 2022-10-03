@@ -50,8 +50,12 @@ class SKD(nn.Module):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)
 
+
+        with torch.no_grad:
+            for i in range(len(stage_list_t) - 1):
+                stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
+
         for i in range(len(stage_list_t)-1):
-            stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
             stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
 
         return stage_list_t, stage_list_s
