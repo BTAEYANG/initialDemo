@@ -24,7 +24,7 @@ class SKD(nn.Module):
         self.embedding_l = nn.ModuleList([])
         for j in dim_in_l:
             # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
-            self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=dim_in_l[-1]))
+            self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
 
         if torch.cuda.is_available():
             self.embedding_l.cuda()
@@ -53,8 +53,11 @@ class SKD(nn.Module):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)
 
-        for i in range(len(stage_list_t)):
-            stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
+        with torch.no_grad():
+            for i in range(len(stage_list_t)):
+                stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
+
+        for i in range(len(stage_list_s)):
             stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
 
         t_tensor = torch.stack(stage_list_t)
