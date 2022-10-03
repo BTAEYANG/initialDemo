@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 class SKD(nn.Module):
 
-    def __init__(self, feat_t, feat_s, model_t):
+    def __init__(self, feat_t, feat_s):
         super(SKD, self).__init__()
 
         dim_in_l = []
@@ -25,8 +25,6 @@ class SKD(nn.Module):
         for j in dim_in_l:
             # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
             self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=256))
-
-        self.t_fc_embedding = model_t.fc
 
         if torch.cuda.is_available():
             self.embedding_l.cuda()
@@ -59,10 +57,10 @@ class SKD(nn.Module):
 
         with torch.no_grad():
             for i in range(len(stage_list_t)):
-                stage_list_t[i] = self.t_fc_embedding(self.embedding_l[i](stage_list_t[i]))
+                stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
 
         for i in range(len(stage_list_t)):
-            stage_list_s[i] = self.t_fc_embedding(self.embedding_l[i](stage_list_s[i]))
+            stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
 
         return stage_list_t, stage_list_s
 
