@@ -2,13 +2,13 @@ import torch
 from torch import nn
 
 from models import resnet32x4, resnet8x4
-from util.embedding_util import MLPEmbed
+from util.embedding_util import MLPEmbed, LinearEmbed
 import torch.nn.functional as F
 
 
 class SKD(nn.Module):
 
-    def __init__(self, feat_t, feat_s):
+    def __init__(self, feat_t, feat_s, model_t):
         super(SKD, self).__init__()
 
         dim_in_l = []
@@ -23,10 +23,13 @@ class SKD(nn.Module):
         # mlp embedding
         self.embedding_l = nn.ModuleList([])
         for j in dim_in_l:
-            self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
+            # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
+            self.embedding_l.append(LinearEmbed(dim_in=j, dim_out=256))
 
         if torch.cuda.is_available():
             self.embedding_l.cuda()
+
+        self.fc_embedding = model_t.fc
 
     @staticmethod
     def compute_stage(g):
@@ -78,10 +81,12 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_embedding, s_embedding):
 
-        loss = [self.loss(i, j) for i, j in zip(t_embedding, s_embedding)]
-        factor = F.softmax(torch.Tensor(loss), dim=-1)
-        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
-        return loss_t
+        loss = []
+        for t, s in zip(t_embedding, s_embedding):
+            delta = torch.abs(t - s)
+            loss += torch.mean((delta[:-1] * delta[1:]).sum(1))
+
+        return loss
 
 
 if __name__ == '__main__':
