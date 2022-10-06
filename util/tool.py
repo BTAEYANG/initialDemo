@@ -34,7 +34,8 @@ def adjust_learning_rate(epoch, opt, optimizer):
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
     else:
-        new_lr = opt.learning_rate, new_beta = opt.beta
+        new_lr = opt.learning_rate
+        new_beta = opt.beta
     return new_lr, new_beta
 
 
