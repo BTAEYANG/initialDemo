@@ -8,8 +8,10 @@ import torch.nn.functional as F
 
 class SKD(nn.Module):
 
-    def __init__(self):
+    def __init__(self, model_t):
         super(SKD, self).__init__()
+
+        self.t_fc = model_t.fc
 
     @staticmethod
     def compute_stage(g):
@@ -33,16 +35,24 @@ class SKD(nn.Module):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)
 
+        stage_list_fc_t = []
+        stage_list_fc_s = []
+
         for i in range(len(stage_list_t)):
             stage_list_t[i] = embed_t[i](stage_list_t[i])
+            stage_list_fc_t.append(self.t_fc(stage_list_t[i]))
 
         for i in range(len(stage_list_s)):
             stage_list_s[i] = embed_s[i](stage_list_s[i])
+            stage_list_fc_s.append(self.t_fc(stage_list_s[i]))
 
         t_tensor = torch.stack(stage_list_t)
         s_tensor = torch.stack(stage_list_s)
 
-        return t_tensor, s_tensor
+        t_fc_tensor = torch.stack(stage_list_fc_t)
+        s_fc_tensor = torch.stack(stage_list_fc_s)
+
+        return t_tensor, s_tensor, t_fc_tensor, s_fc_tensor
 
 
 class SKD_Loss(nn.Module):
@@ -60,12 +70,11 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, t_tensor, s_tensor):
+    def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
-        # loss_l = [self.loss(t, s) for t, s in zip(t_embedding, s_embedding)]
-        # factor = F.softmax(torch.Tensor(loss_l), dim=-1)
-        # loss_t = sum(factor[index] * loss_l[index] for index, value in enumerate(loss_l))
-        loss_t = self.loss(t_tensor, s_tensor)
+        loss_l = [self.loss(t_tensor, s_tensor), self.loss(t_fc_tensor, s_fc_tensor)]
+        factor = F.softmax(torch.Tensor(loss_l), dim=-1)
+        loss_t = sum(factor[i] * loss_l[i] for i, value in enumerate(loss_l))
         return loss_t
 
 
