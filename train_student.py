@@ -63,11 +63,15 @@ def parse_option():
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
                                                                       'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
-    parser.add_argument('--loss_type', type=str, default='SmoothL1', help='train loss_dot function')
+    parser.add_argument('--loss_type', type=str, default='SmoothL1', help='choose loss-type function')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
-    parser.add_argument('-a', '--alpha', type=float, default=5, help='weight balance for KD')
-    parser.add_argument('-b', '--beta', type=float, default=25, help='weight balance for other losses')
+    parser.add_argument('-a', '--alpha', type=float, default=None, help='weight balance for KD')
+    parser.add_argument('-b', '--beta', type=float, default=None, help='weight balance for other losses')
+
+    parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
+    parser.add_argument('--beta_increase_rate', type=float, default=10, help='increase rate for beta loss -b')
+
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
@@ -135,8 +139,12 @@ def main():
 
     criterion_cls = nn.CrossEntropyLoss()
 
-    # criterion_kl = DistillKL(opt.kd_T)
-    criterion_kl = GKD(opt.kd_T)
+    if opt.kd_type == 'KD':
+        criterion_kl = DistillKL(opt.kd_T)
+    elif opt.kd_type == 'GKD':
+        criterion_kl = GKD(opt.kd_T)
+    else:
+        criterion_kl = GKD(opt.kd_T)
 
     if opt.distill == 'kd':
         criterion_kd = DistillKL(opt.kd_T)
@@ -197,9 +205,10 @@ def main():
     # routine
     for epoch in range(1, opt.epochs + 1):
 
-        adjust_learning_rate(epoch, opt, optimizer)
+        new_lr, new_beta = adjust_learning_rate(epoch, opt, optimizer)
 
-        print("==> Training...")
+        opt.beta = new_beta  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
+        print(f"==> Training... Current lr: {new_lr}; Current -b: {opt.beta}")
 
         time1 = time.time()
         train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt)
