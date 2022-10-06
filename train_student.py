@@ -72,7 +72,6 @@ def parse_option():
     parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
     parser.add_argument('--beta_increase_rate', type=float, default=5, help='increase rate for beta loss -b')
 
-
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
 
@@ -205,11 +204,13 @@ def main():
     # routine
     for epoch in range(1, opt.epochs + 1):
 
-        new_lr, new_beta = adjust_learning_rate(epoch, opt, optimizer)  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
+        new_lr, new_beta = adjust_learning_rate(epoch, opt,
+                                                optimizer)  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
         print(f"==> Training... Current lr: {new_lr}; Current -b: {new_beta}")
 
         time1 = time.time()
-        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, new_beta)
+        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt,
+                                              new_beta)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 

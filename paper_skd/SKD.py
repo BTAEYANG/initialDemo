@@ -28,7 +28,6 @@ class SKD(nn.Module):
             stage_list.append(torch.bmm(bot, top).view(bot.shape[0], -1))
         return stage_list
 
-
     def forward(self, f_t, f_s, embed_s, embed_t, model_t):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)

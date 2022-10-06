@@ -123,7 +123,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         else:
             raise NotImplementedError(opt.distill)
 
-        loss = opt.gamma * loss_cls + opt.alpha * loss_kl + new_beta * loss_kd
+        loss = opt.gamma * loss_cls + opt.alpha * loss_kl + opt.beta * loss_kd
 
         acc1, acc5 = accuracy(logit_s, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
