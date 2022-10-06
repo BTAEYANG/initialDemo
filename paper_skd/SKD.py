@@ -8,10 +8,8 @@ import torch.nn.functional as F
 
 class SKD(nn.Module):
 
-    def __init__(self, model_t):
+    def __init__(self):
         super(SKD, self).__init__()
-
-        self.t_fc = model_t.fc
 
     @staticmethod
     def compute_stage(g):
@@ -31,7 +29,7 @@ class SKD(nn.Module):
         return stage_list
 
 
-    def forward(self, f_t, f_s, embed_s, embed_t):
+    def forward(self, f_t, f_s, embed_s, embed_t, model_t):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)
 
@@ -40,11 +38,11 @@ class SKD(nn.Module):
 
         for i in range(len(stage_list_t)):
             stage_list_t[i] = embed_t[i](stage_list_t[i])
-            stage_list_fc_t.append(self.t_fc(stage_list_t[i]))
+            stage_list_fc_t.append(model_t.fc(stage_list_t[i]))
 
         for i in range(len(stage_list_s)):
             stage_list_s[i] = embed_s[i](stage_list_s[i])
-            stage_list_fc_s.append(self.t_fc(stage_list_s[i]))
+            stage_list_fc_s.append(model_t.fc(stage_list_s[i]))
 
         t_tensor = torch.stack(stage_list_t)
         s_tensor = torch.stack(stage_list_s)
