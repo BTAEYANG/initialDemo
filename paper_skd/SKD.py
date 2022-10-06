@@ -8,28 +8,8 @@ import torch.nn.functional as F
 
 class SKD(nn.Module):
 
-    def __init__(self, feat_t, feat_s):
+    def __init__(self):
         super(SKD, self).__init__()
-
-        dim_in_l = []
-        for i in range(len(feat_t) - 1):
-            b_H, t_H = feat_t[i].shape[2], feat_t[i + 1].shape[2]
-            if b_H > t_H:
-                dim_in_l.append(int(t_H * t_H))
-            else:
-                dim_in_l.append(int(b_H * b_H))
-
-
-        # mlp embedding
-        self.embedding_l = nn.ModuleList([])
-        for j in dim_in_l:
-            # self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
-            self.embedding_l.append(MLPEmbed(dim_in=j, dim_out=dim_in_l[-1]))
-
-        if torch.cuda.is_available():
-            self.embedding_l.cuda()
-
-
 
     @staticmethod
     def compute_stage(g):
@@ -49,16 +29,15 @@ class SKD(nn.Module):
         return stage_list
 
 
-    def forward(self, f_t, f_s):
+    def forward(self, f_t, f_s, embed_s, embed_t):
         stage_list_t = self.compute_stage(f_t)
         stage_list_s = self.compute_stage(f_s)
 
-        with torch.no_grad():
-            for i in range(len(stage_list_t)):
-                stage_list_t[i] = self.embedding_l[i](stage_list_t[i])
+        for i in range(len(stage_list_t)):
+            stage_list_t[i] = embed_t[i](stage_list_t[i])
 
         for i in range(len(stage_list_s)):
-            stage_list_s[i] = self.embedding_l[i](stage_list_s[i])
+            stage_list_s[i] = embed_s[i](stage_list_s[i])
 
         t_tensor = torch.stack(stage_list_t)
         s_tensor = torch.stack(stage_list_s)

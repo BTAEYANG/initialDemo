@@ -116,7 +116,9 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             f_t, f_s, g_t, g_s, se_g_t, se_g_s = module_list[1](feat_t, feat_s, error_index)
             loss_kd = criterion_kd(f_t, f_s, g_t, g_s, se_g_t, se_g_s)
         elif opt.distill == 'SKD':
-            t_tensor, s_tensor = module_list[1](feat_t[:-1], feat_s[:-1])
+            embed_s = module_list[2]
+            embed_t = module_list[3]
+            t_tensor, s_tensor = module_list[1](feat_t[:-1], feat_s[:-1], embed_s, embed_t)
             loss_kd = criterion_kd(t_tensor, s_tensor)
         else:
             raise NotImplementedError(opt.distill)

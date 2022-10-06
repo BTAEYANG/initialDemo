@@ -21,6 +21,7 @@ from models import model_dict
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
 from paper_skd.SKD import SKD, SKD_Loss
+from util.embedding_util import LinearEmbed
 from util.tool import adjust_learning_rate, get_teacher_name, load_teacher
 from util.train_loops import train_distill
 from util.val_loops import validate
@@ -145,9 +146,26 @@ def main():
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
     elif opt.distill == 'SKD':
-        skd = SKD(feat_t[:-1], feat_s[:-1])
+        embed_s = nn.ModuleList([])
+        embed_t = nn.ModuleList([])
+        dim_in_l = []
+        for i in range(len(feat_t) - 1):
+            b_H, t_H = feat_t[i].shape[2], feat_t[i + 1].shape[2]
+            if b_H > t_H:
+                dim_in_l.append(int(t_H * t_H))
+            else:
+                dim_in_l.append(int(b_H * b_H))
+
+        for j in dim_in_l:
+            embed_s.append(LinearEmbed(dim_in=j, dim_out=dim_in_l[-1]))
+            embed_t.append(LinearEmbed(dim_in=j, dim_out=dim_in_l[-1]))
+        skd = SKD()
         module_list.append(skd)
+        module_list.append(embed_s)
+        module_list.append(embed_t)
         trainable_list.append(skd)
+        trainable_list.append(embed_s)
+        trainable_list.append(embed_t)
         criterion_kd = SKD_Loss(opt.loss_type)
     else:
         raise NotImplementedError(opt.distill)
