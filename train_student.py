@@ -205,13 +205,11 @@ def main():
     # routine
     for epoch in range(1, opt.epochs + 1):
 
-        new_lr, new_beta = adjust_learning_rate(epoch, opt, optimizer)
-
-        opt.beta = new_beta  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
-        print(f"==> Training... Current lr: {new_lr}; Current -b: {opt.beta}")
+        new_lr, new_beta = adjust_learning_rate(epoch, opt, optimizer)  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
+        print(f"==> Training... Current lr: {new_lr}; Current -b: {new_beta}")
 
         time1 = time.time()
-        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt)
+        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, new_beta)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
