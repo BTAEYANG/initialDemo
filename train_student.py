@@ -148,6 +148,7 @@ def main():
     elif opt.distill == 'SKD':
         embed_s = nn.ModuleList([])
         embed_t = nn.ModuleList([])
+        feat_t = feat_t[:-1]
         dim_in_l = []
         for i in range(len(feat_t) - 1):
             b_H, t_H = feat_t[i].shape[2], feat_t[i + 1].shape[2]
