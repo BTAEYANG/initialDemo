@@ -97,10 +97,10 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         # ===================forward=====================
         preact = False
         # student model output : student feature map and student logit value
-        feat_s, logit_s = model_s(input, is_feat=True, preact=preact, feat_preact=True)
+        feat_s, logit_s = model_s(input, is_feat=True, preact=preact, feat_preact=False)
         with torch.no_grad():
             # teacher model output : teacher feature map and teacher logit value
-            feat_t, logit_t = model_t(input, is_feat=True, preact=preact, feat_preact=True)
+            feat_t, logit_t = model_t(input, is_feat=True, preact=preact, feat_preact=False)
             # 返回一个新的tensor，从当前计算图中分离下来的，但是仍指向原变量的存放位置,不同之处只是requires_grad为false，得到的这个tensor永远不需要计算其梯度，不具有grad
             feat_t = [f.detach() for f in feat_t]
 
@@ -123,7 +123,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         else:
             raise NotImplementedError(opt.distill)
 
-        loss = opt.gamma * loss_cls + opt.alpha * loss_kl + new_beta * loss_kd
+        loss = opt.gamma * loss_cls + opt.alpha * loss_kl + opt.beta * loss_kd
 
         acc1, acc5 = accuracy(logit_s, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
