@@ -59,21 +59,45 @@ class SKD_Loss(nn.Module):
         super(SKD_Loss, self).__init__()
 
         if loss_type == 'SmoothL1':
-            self.loss = nn.SmoothL1Loss()
+            self.loss = nn.SmoothL1Loss(reduction='mean', beta=1.0)
         elif loss_type == 'MSE':
             self.loss = nn.MSELoss()
         elif loss_type == 'Huber':
-            self.loss = nn.HuberLoss()
+            self.loss = nn.HuberLoss(reduction='mean', delta=1.0)
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+
+    def _channel_mean_loss(self, x, y):
+        loss = 0.
+        for s, t in zip(x, y):
+            s = self.avg_pool(s)
+            t = self.avg_pool(t)
+            loss += self.loss(s, t)
+        return loss
+
+    def _spatial_mean_loss(self, x, y):
+        loss = 0.
+        for s, t in zip(x, y):
+            s = s.mean(dim=1, keepdim=False)
+            t = t.mean(dim=1, keepdim=False)
+            loss += self.loss(s, t)
+        return loss
+
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
-        # loss_l = [self.loss(t_tensor, s_tensor), self.loss(t_fc_tensor, s_fc_tensor)]
-        # factor = F.softmax(torch.Tensor(loss_l), dim=-1)
-        # loss_t = sum(factor[i] * loss_l[i] for i, value in enumerate(loss_l))
-        loss = self.loss(t_tensor, s_tensor) + self.loss(t_fc_tensor, s_fc_tensor)
-        return loss
+        loss_ten_s = self._spatial_mean_loss(s_tensor, t_tensor)
+        loss_ten_c = self._channel_mean_loss(s_tensor, t_tensor)
+
+        loss_f_s = self._spatial_mean_loss(s_fc_tensor, t_fc_tensor)
+        loss_f_c = self._channel_mean_loss(s_fc_tensor, t_fc_tensor)
+
+        loss = [loss_f_s, loss_f_c, loss_ten_s, loss_ten_c]
+        factor = F.softmax(torch.Tensor(loss), dim=-1)
+        loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
+
+        return loss_t
 
 
 if __name__ == '__main__':
