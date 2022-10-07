@@ -77,7 +77,6 @@ class SKD_Loss(nn.Module):
 
 if __name__ == '__main__':
     pass
-    # data = torch.randn(2, 3, 32, 32)
     # x = torch.randn(64, 3, 32, 32)
     #
     # b, _, _, _ = x.shape
@@ -85,15 +84,28 @@ if __name__ == '__main__':
     # s_net = resnet8x4(num_classes=100)
     # t_net = resnet32x4(num_classes=100)
     #
-    # feat_t, _ = s_net(data, is_feat=True, preact=False, feat_preact=False)
-    # feat_s, _ = t_net(data, is_feat=True, preact=False, feat_preact=False)
+    # f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=True)
+    # f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=True)
     #
-    # f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=False)
-    # f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=False)
+    # skd = SKD()
     #
-    # skd = SKD(feat_t[:-1], feat_s[:-1], t_net)
+    # embed_s = nn.ModuleList([])
+    # embed_t = nn.ModuleList([])
+    # f_t = f_t[:-1]
+    # f_s = f_s[:-1]
+    # dim_in_l = []
+    # for i in range(len(f_t) - 1):
+    #     b_H, t_H = f_t[i].shape[2], f_t[i + 1].shape[2]
+    #     if b_H > t_H:
+    #         dim_in_l.append(int(t_H * t_H))
+    #     else:
+    #         dim_in_l.append(int(b_H * b_H))
+    #
+    # for j in dim_in_l:
+    #     embed_s.append(LinearEmbed(dim_in=j, dim_out=f_s[-1].shape[1]))
+    #     embed_t.append(LinearEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
     #
     # with torch.no_grad():
-    #     fsp_list_t, fsp_list_s = skd(f_t[:-1], f_s[:-1])
+    #     t_tensor, s_tensor, t_fc_tensor, s_fc_tensor = skd(f_t, f_s, embed_s, embed_t, t_net)
     #     loss = SKD_Loss('SmoothL1')
-    #     loss_val = loss(fsp_list_t, fsp_list_s)
+    #     loss_val = loss(t_tensor, s_tensor, t_fc_tensor, s_fc_tensor)

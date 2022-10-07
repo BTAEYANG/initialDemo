@@ -21,7 +21,7 @@ from models import model_dict
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
 from paper_skd.SKD import SKD, SKD_Loss
-from util.embedding_util import LinearEmbed
+from util.embedding_util import LinearEmbed, MLPEmbed
 from util.tool import adjust_learning_rate, get_teacher_name, load_teacher
 from util.train_loops import train_distill
 from util.val_loops import validate
@@ -126,8 +126,8 @@ def main():
     model_t.eval()
     model_s.eval()
 
-    feat_t, _ = model_t(data, is_feat=True, preact=False, feat_preact=False)
-    feat_s, _ = model_s(data, is_feat=True, preact=False, feat_preact=False)
+    feat_t, _ = model_t(data, is_feat=True, preact=False, feat_preact=True)
+    feat_s, _ = model_s(data, is_feat=True, preact=False, feat_preact=True)
 
     # init module list to add student model and teacher model or other model need by some kd methods
     module_list = nn.ModuleList([])
@@ -165,8 +165,8 @@ def main():
                 dim_in_l.append(int(b_H * b_H))
 
         for j in dim_in_l:
-            embed_s.append(LinearEmbed(dim_in=j, dim_out=feat_s[-1].shape[1]))
-            embed_t.append(LinearEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
+            embed_s.append(MLPEmbed(dim_in=j, dim_out=feat_s[-1].shape[1]))
+            embed_t.append(MLPEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
         skd = SKD()
         module_list.append(skd)
         module_list.append(embed_s)
