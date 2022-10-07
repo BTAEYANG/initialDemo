@@ -69,10 +69,11 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
-        loss_l = [self.loss(t_tensor, s_tensor), self.loss(t_fc_tensor, s_fc_tensor)]
-        factor = F.softmax(torch.Tensor(loss_l), dim=-1)
-        loss_t = sum(factor[i] * loss_l[i] for i, value in enumerate(loss_l))
-        return loss_t
+        # loss_l = [self.loss(t_tensor, s_tensor), self.loss(t_fc_tensor, s_fc_tensor)]
+        # factor = F.softmax(torch.Tensor(loss_l), dim=-1)
+        # loss_t = sum(factor[i] * loss_l[i] for i, value in enumerate(loss_l))
+        loss = self.loss(t_tensor, s_tensor) + self.loss(t_fc_tensor, s_fc_tensor)
+        return loss
 
 
 if __name__ == '__main__':
