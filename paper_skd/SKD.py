@@ -25,7 +25,7 @@ class SKD(nn.Module):
                 pass
             bot = bot.mean(dim=1, keepdim=False)
             top = top.mean(dim=1, keepdim=False)
-            stage_list.append(torch.bmm(bot, top).view(bot.shape[0], -1))
+            stage_list.append(torch.bmm(bot, top.transpose(1, 2)).view(bot.shape[0], -1))
         return stage_list
 
     def forward(self, f_t, f_s, embed_s, embed_t, model_t):
