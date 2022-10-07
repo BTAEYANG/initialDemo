@@ -165,8 +165,8 @@ def main():
                 dim_in_l.append(int(b_H * b_H))
 
         for j in dim_in_l:
-            embed_s.append(MLPEmbed(dim_in=j, dim_out=feat_s[-1].shape[1]))
-            embed_t.append(MLPEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
+            embed_s.append(LinearEmbed(dim_in=j, dim_out=feat_s[-1].shape[1]))
+            embed_t.append(LinearEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
         skd = SKD()
         module_list.append(skd)
         module_list.append(embed_s)
