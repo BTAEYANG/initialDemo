@@ -71,7 +71,6 @@ class SKD_Loss(nn.Module):
 
         loss_l = [self.loss(t_tensor, s_tensor), self.loss(t_fc_tensor, s_fc_tensor)]
         factor = F.softmax(torch.Tensor(loss_l), dim=-1)
-        loss_l.reverse()
         loss_t = sum(factor[i] * loss_l[i] for i, value in enumerate(loss_l))
         return loss_t
 
