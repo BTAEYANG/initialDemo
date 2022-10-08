@@ -233,22 +233,17 @@ def main():
             }
             save_file = os.path.join(opt.save_folder, '{}_best.pth'.format(opt.model_s))
             csv_name = os.path.join(opt.save_folder,
-                                    '{}_{}_{}_{}_r:{}_a:{}_b:{}_T:{}_{}_best.csv'.format(opt.model_s, opt.model_t,
-                                                                                         opt.dataset,
-                                                                                         opt.distill,
-                                                                                         opt.gamma, opt.alpha, opt.beta,
-                                                                                         opt.kd_T,
-                                                                                         opt.trial))
+                                    f'{opt.model_s}_{opt.model_t}_{opt.dataset}_{opt.distill}_r:{opt.gamma}_a:{opt.alpha}_b:{opt.beta}_T:{opt.kd_T}_{opt.trial}_best.csv')
             print('saving the best model and csv!')
             torch.save(state, save_file)
             with open(csv_name, mode='a', newline='', encoding='utf8') as csv_file:
                 csv_writer = csv.writer(csv_file)
                 # columns_name
                 csv_writer.writerow(
-                    ["model_s", "model_t", "dataset", "distill", "trial", "epoch", "acc"])
+                    ["model_s", "model_t", "dataset", "distill", "loss_type", "trial", "epoch", "new_bate", "best_acc"])
 
-                csv_writer.writerow([opt.model_s, opt.model_t, opt.dataset,
-                                     opt.distill, opt.trial, epoch, best_acc])
+                csv_writer.writerow([opt.model_s, opt.model_t, opt.dataset, opt.loss_type,
+                                     opt.distill, opt.trial, epoch, new_beta, best_acc])
                 csv_file.close()
 
         # regular saving
