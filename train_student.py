@@ -70,7 +70,7 @@ def parse_option():
     parser.add_argument('-b', '--beta', type=float, default=None, help='weight balance for other losses')
 
     parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
-    parser.add_argument('--beta_increase_rate', type=float, default=None, help='increase rate for beta loss -b')
+    parser.add_argument('--beta_increase_rate', type=float, default=1, help='increase rate for beta loss -b， default 1 beta not change')
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
