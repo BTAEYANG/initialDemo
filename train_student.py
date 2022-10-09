@@ -63,7 +63,7 @@ def parse_option():
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
                                                                       'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
-    parser.add_argument('--loss_type', type=str, default='SmoothL1', help='choose loss-type function')
+    parser.add_argument('--loss_type', type=str, default='MSE', help='choose loss-type function')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
     parser.add_argument('-a', '--alpha', type=float, default=None, help='weight balance for KD')
