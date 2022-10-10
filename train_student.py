@@ -254,7 +254,7 @@ def main():
                     ["model_s", "model_t", "dataset", "distill", "loss_type", "trial", "epoch", "new_bate", "best_acc"])
 
                 csv_writer.writerow([opt.model_s, opt.model_t, opt.dataset, opt.loss_type,
-                                     opt.distill, opt.trial, epoch, new_beta, best_acc])
+                                     opt.distill, opt.trial, epoch, opt.new_beta, best_acc])
                 csv_file.close()
 
         # regular saving
