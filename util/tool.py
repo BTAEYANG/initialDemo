@@ -39,7 +39,7 @@ def adjust_learning_rate(epoch, opt, optimizer):
 
 def adjust_beta_rate(epoch, opt):
     """Sets the beta rate to the initial beta decayed by increase rate every steep step"""
-    steps = np.sum(epoch > np.asarray(opt.lr_decay_epochs))
+    steps = np.sum(epoch > np.asarray(opt.beta_rate_epochs))
     beta_steps = np.sum(epoch > np.asarray(opt.beta_rate_epochs))
     if steps > 0:
         if epoch <= 151:
