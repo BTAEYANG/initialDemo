@@ -41,7 +41,7 @@ def adjust_beta_rate(epoch, opt):
     """Sets the beta rate to the initial beta decayed by increase rate every steep step"""
     steps = np.sum(epoch > np.asarray(opt.beta_rate_epochs))
     if steps > 0:
-        if epoch < 150:
+        if epoch <= 150:
             new_beta = opt.beta * (opt.beta_decay_rate ** steps)
         else:
             new_beta = opt.new_beta * opt.beta_increase_rate
