@@ -30,13 +30,25 @@ def adjust_learning_rate(epoch, opt, optimizer):
     steps = np.sum(epoch > np.asarray(opt.lr_decay_epochs))
     if steps > 0:
         new_lr = opt.learning_rate * (opt.lr_decay_rate ** steps)
-        new_beta = opt.beta * (opt.beta_increase_rate ** steps)
         for param_group in optimizer.param_groups:
             param_group['lr'] = new_lr
     else:
         new_lr = opt.learning_rate
+    return new_lr
+
+
+def adjust_beta_rate(epoch, opt):
+    """Sets the beta rate to the initial beta decayed by increase rate every steep step"""
+    steps = np.sum(epoch > np.asarray(opt.beta_rate_epochs))
+    if steps > 0:
+        if epoch < 150:
+            new_beta = opt.beta * (opt.beta_decay_rate ** steps)
+        else:
+            new_beta = opt.new_beta * opt.beta_increase_rate
+    else:
         new_beta = opt.beta
-    return new_lr, new_beta
+
+    return new_beta
 
 
 class AverageMeter(object):

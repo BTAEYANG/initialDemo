@@ -22,7 +22,7 @@ from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
 from paper_skd.SKD import SKD, SKD_Loss
 from util.embedding_util import LinearEmbed, MLPEmbed
-from util.tool import adjust_learning_rate, get_teacher_name, load_teacher
+from util.tool import adjust_learning_rate, get_teacher_name, load_teacher, adjust_beta_rate
 from util.train_loops import train_distill
 from util.val_loops import validate
 
@@ -67,10 +67,15 @@ def parse_option():
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
     parser.add_argument('-a', '--alpha', type=float, default=None, help='weight balance for KD')
-    parser.add_argument('-b', '--beta', type=float, default=None, help='weight balance for other losses')
+    parser.add_argument('-b', '--beta', type=float, default=10, help='weight balance for other losses')
 
     parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
-    parser.add_argument('--beta_increase_rate', type=float, default=1, help='increase rate for beta loss -b， default 1 beta not change')
+
+
+    parser.add_argument('--beta_increase_rate', type=float, default=1.2, help='increase rate for beta loss -b， default 1 beta not change')
+    parser.add_argument('--beta_decay_rate', type=float, default=0.5, help='decay rate for beta loss -b， default 1 beta not change')
+    parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210', help='where to change beta, can be a list')
+    parser.add_argument('--new_beta', type=float, default=10, help='new weight balance for other losses')
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
@@ -88,6 +93,11 @@ def parse_option():
     opt.lr_decay_epochs = list([])
     for it in iterations:
         opt.lr_decay_epochs.append(int(it))
+
+    beta_iterations = opt.beta_rate_epochs.split(',')
+    opt.beta_rate_epochs = list([])
+    for it in beta_iterations:
+        opt.beta_rate_epochs.append(int(it))
 
     opt.model_t = get_teacher_name(opt.path_t)
 
@@ -204,13 +214,14 @@ def main():
     # routine
     for epoch in range(1, opt.epochs + 1):
 
-        new_lr, new_beta = adjust_learning_rate(epoch, opt,
-                                                optimizer)  # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
-        print(f"==> Training... Current lr: {new_lr}; Current -b: {new_beta}")
+        new_lr = adjust_learning_rate(epoch, opt, optimizer)
+
+        # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
+        opt.new_beta = adjust_beta_rate(epoch, opt, optimizer)
+        print(f"==> Training... Current lr: {new_lr}; Current -b: {opt.new_beta}")
 
         time1 = time.time()
-        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt,
-                                              new_beta)
+        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, opt.new_beta)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
