@@ -43,7 +43,7 @@ def adjust_beta_rate(epoch, opt):
     beta_steps = np.sum(epoch > np.asarray(opt.beta_rate_epochs))
     if beta_steps > 0:
         if epoch <= 151:
-            new_beta = opt.beta * (opt.beta_decay_rate ** steps)
+            new_beta = opt.beta * (opt.beta_decay_rate ** beta_steps)
             opt.new_beta = new_beta
         else:
             new_beta = opt.new_beta * (opt.beta_increase_rate ** (beta_steps-steps-1))

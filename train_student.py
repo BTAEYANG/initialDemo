@@ -71,10 +71,12 @@ def parse_option():
 
     parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
 
-
-    parser.add_argument('--beta_increase_rate', type=float, default=1.2, help='increase rate for beta loss -b， default 1 beta not change')
-    parser.add_argument('--beta_decay_rate', type=float, default=0.5, help='decay rate for beta loss -b， default 1 beta not change')
-    parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210', help='where to change beta, can be a list')
+    parser.add_argument('--beta_increase_rate', type=float, default=1.2,
+                        help='increase rate for beta loss -b， default 1 beta not change')
+    parser.add_argument('--beta_decay_rate', type=float, default=0.5,
+                        help='decay rate for beta loss -b， default 1 beta not change')
+    parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210',
+                        help='where to change beta, can be a list')
     parser.add_argument('--new_beta', type=float, default=None, help='record new weight balance for other losses')
     parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
 
@@ -222,7 +224,8 @@ def main():
         print(f"==> Training... Current lr: {new_lr}; Current -b: {new_beta}")
 
         time1 = time.time()
-        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, new_beta)
+        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt,
+                                              new_beta)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
