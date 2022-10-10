@@ -75,7 +75,7 @@ def parse_option():
     parser.add_argument('--beta_increase_rate', type=float, default=1.2, help='increase rate for beta loss -b， default 1 beta not change')
     parser.add_argument('--beta_decay_rate', type=float, default=0.5, help='decay rate for beta loss -b， default 1 beta not change')
     parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210', help='where to change beta, can be a list')
-    parser.add_argument('--new_beta', type=float, default=10, help='new weight balance for other losses')
+    parser.add_argument('--new_beta', type=float, default=None, help='record new weight balance for other losses')
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
@@ -217,11 +217,11 @@ def main():
         new_lr = adjust_learning_rate(epoch, opt, optimizer)
 
         # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
-        opt.new_beta = adjust_beta_rate(epoch, opt)
-        print(f"==> Training... Current lr: {new_lr}; Current -b: {opt.new_beta}")
+        new_beta = adjust_beta_rate(epoch, opt)
+        print(f"==> Training... Current lr: {new_lr}; Current -b: {new_beta}")
 
         time1 = time.time()
-        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, opt.new_beta)
+        train_acc, train_loss = train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, new_beta)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
@@ -254,7 +254,7 @@ def main():
                     ["model_s", "model_t", "dataset", "distill", "loss_type", "trial", "epoch", "new_bate", "best_acc"])
 
                 csv_writer.writerow([opt.model_s, opt.model_t, opt.dataset, opt.loss_type,
-                                     opt.distill, opt.trial, epoch, opt.new_beta, best_acc])
+                                     opt.distill, opt.trial, epoch, new_beta, best_acc])
                 csv_file.close()
 
         # regular saving
