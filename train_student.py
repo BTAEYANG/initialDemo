@@ -217,7 +217,7 @@ def main():
         new_lr = adjust_learning_rate(epoch, opt, optimizer)
 
         # beta from initial value increase to final value with epoch (0.01 - 0.1 - 1 -10)
-        opt.new_beta = adjust_beta_rate(epoch, opt, optimizer)
+        opt.new_beta = adjust_beta_rate(epoch, opt)
         print(f"==> Training... Current lr: {new_lr}; Current -b: {opt.new_beta}")
 
         time1 = time.time()
