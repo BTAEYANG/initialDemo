@@ -43,6 +43,7 @@ def adjust_beta_rate(epoch, opt):
     if steps > 0:
         if epoch <= 150:
             new_beta = opt.beta * (opt.beta_decay_rate ** steps)
+            opt.new_beta = new_beta
         else:
             new_beta = opt.new_beta * (opt.beta_increase_rate ** steps)
     else:
