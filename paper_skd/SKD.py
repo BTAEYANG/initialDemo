@@ -67,17 +67,17 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.embedding_avg = nn.AdaptiveAvgPool2d((None, 1))
 
-    def _channel_mean_loss(self, x, y):
+    def _embedding_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
-            s = self.avg_pool(s)
-            t = self.avg_pool(t)
+            s = self.embedding_avg(s)
+            t = self.embedding_avg(t)
             loss += self.loss(s, t)
         return loss
 
-    def _spatial_mean_loss(self, x, y):
+    def _sample_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
             s = s.mean(dim=0, keepdim=False)
@@ -85,18 +85,25 @@ class SKD_Loss(nn.Module):
             loss += self.loss(s, t)
         return loss
 
+    def _stage_mean_loss(self, x, y):
+        loss = self.loss(x.mean(dim=0, keepdim=False), y.mean(dim=0, keepdim=False))
+        return loss
+
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
         loss_ten_base = self.loss(t_tensor, s_tensor)
         loss_fc_base = self.loss(t_fc_tensor, s_fc_tensor)
 
-        loss_ten_s = self._spatial_mean_loss(s_tensor, t_tensor)
-        loss_ten_c = self._channel_mean_loss(s_tensor, t_tensor)
+        loss_ten_e = self._embedding_mean_loss(s_tensor, t_tensor)
+        loss_ten_sa = self._sample_mean_loss(s_tensor, t_tensor)
+        loss_ten_st = self._stage_mean_loss(s_tensor, t_tensor)
 
-        loss_f_s = self._spatial_mean_loss(s_fc_tensor, t_fc_tensor)
-        loss_f_c = self._channel_mean_loss(s_fc_tensor, t_fc_tensor)
 
-        loss = [loss_ten_base, loss_fc_base, loss_f_s, loss_f_c, loss_ten_s, loss_ten_c]
+        loss_fc_e = self._embedding_mean_loss(s_fc_tensor, t_fc_tensor)
+        loss_fc_sa = self._sample_mean_loss(s_fc_tensor, t_fc_tensor)
+        loss_fc_st = self._stage_mean_loss(s_fc_tensor, t_fc_tensor)
+
+        loss = [loss_ten_base, loss_fc_base, loss_ten_e, loss_ten_sa, loss_ten_st, loss_fc_e, loss_fc_sa, loss_fc_st]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         loss.reverse()
         loss_t = sum(factor[index] * loss[index] for index, value in enumerate(loss))
@@ -113,8 +120,8 @@ if __name__ == '__main__':
     # s_net = resnet8x4(num_classes=100)
     # t_net = resnet32x4(num_classes=100)
     #
-    # f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=True)
-    # f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=True)
+    # f_t, s_logit = s_net(x, is_feat=True, preact=False, feat_preact=False)
+    # f_s, t_logit = t_net(x, is_feat=True, preact=False, feat_preact=False)
     #
     # skd = SKD()
     #
