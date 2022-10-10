@@ -49,6 +49,11 @@ class SKD(nn.Module):
         t_fc_tensor = torch.stack(stage_list_fc_t)
         s_fc_tensor = torch.stack(stage_list_fc_s)
 
+        print(t_tensor.shape)
+        print(s_tensor.shape)
+        print(t_fc_tensor.shape)
+        print(t_fc_tensor.shape)
+
         return t_tensor, s_tensor, t_fc_tensor, s_fc_tensor
 
 
@@ -80,18 +85,12 @@ class SKD_Loss(nn.Module):
     def _spatial_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
-            s = s.mean(dim=2, keepdim=False).mean(dim=3, keepdim=False)
-            t = t.mean(dim=2, keepdim=False).mean(dim=3, keepdim=False)
+            s = s.mean(dim=1, keepdim=False).mean(dim=2, keepdim=False)
+            t = t.mean(dim=1, keepdim=False).mean(dim=2, keepdim=False)
             loss += self.loss(s, t)
         return loss
 
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
-
-        print(t_tensor.shape)
-        print(s_tensor.shape)
-
-        print(t_fc_tensor.shape)
-        print(s_fc_tensor.shape)
 
         loss_ten_base = self.loss(t_tensor, s_tensor)
         loss_fc_base = self.loss(t_fc_tensor, s_fc_tensor)
