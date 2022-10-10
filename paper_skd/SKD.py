@@ -87,6 +87,12 @@ class SKD_Loss(nn.Module):
 
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
+        print(t_tensor.shape)
+        print(s_tensor.shape)
+
+        print(t_fc_tensor.shape)
+        print(s_fc_tensor.shape)
+
         loss_ten_base = self.loss(t_tensor, s_tensor)
         loss_fc_base = self.loss(t_fc_tensor, s_fc_tensor)
 
