@@ -90,13 +90,11 @@ class SKD_Loss(nn.Module):
     def forward(self, t_tensor, s_tensor, t_fc_tensor, s_fc_tensor):
 
         loss_ten_base = self.loss(t_tensor, s_tensor)
-        loss_fc_base = self.loss(t_fc_tensor, s_fc_tensor)
-
         loss_ten_e = self._embedding_mean_loss(s_tensor, t_tensor)
         loss_ten_sa = self._sample_mean_loss(s_tensor, t_tensor)
         loss_ten_st = self._stage_mean_loss(s_tensor, t_tensor)
 
-
+        loss_fc_base = self.loss(t_fc_tensor, s_fc_tensor)
         loss_fc_e = self._embedding_mean_loss(s_fc_tensor, t_fc_tensor)
         loss_fc_sa = self._sample_mean_loss(s_fc_tensor, t_fc_tensor)
         loss_fc_st = self._stage_mean_loss(s_fc_tensor, t_fc_tensor)
