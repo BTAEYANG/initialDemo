@@ -76,7 +76,7 @@ def parse_option():
     parser.add_argument('--beta_decay_rate', type=float, default=0.5, help='decay rate for beta loss -b， default 1 beta not change')
     parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210', help='where to change beta, can be a list')
     parser.add_argument('--new_beta', type=float, default=None, help='record new weight balance for other losses')
-    parser.add_argument('--reverse', type=bool, default='False', action='store_true', help='reverse loss factor')
+    parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
