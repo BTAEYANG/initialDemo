@@ -80,8 +80,8 @@ class SKD_Loss(nn.Module):
     def _spatial_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
-            s = s.mean(dim=1, keepdim=False)
-            t = t.mean(dim=1, keepdim=False)
+            s = s.mean(dim=2, keepdim=False).mean(dim=3, keepdim=False)
+            t = t.mean(dim=2, keepdim=False).mean(dim=3, keepdim=False)
             loss += self.loss(s, t)
         return loss
 
