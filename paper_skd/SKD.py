@@ -67,13 +67,11 @@ class SKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-        self.embedding_avg = nn.AdaptiveAvgPool2d((None, 1))
-
     def _embedding_mean_loss(self, x, y):
         loss = 0.
         for s, t in zip(x, y):
-            s = self.embedding_avg(s)
-            t = self.embedding_avg(t)
+            s = s.mean(dim=1, keepdim=False)
+            t = t.mean(dim=1, keepdim=False)
             loss += self.loss(s, t)
         return loss
 
