@@ -107,7 +107,10 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         # cls -r weight for classification
         loss_cls = criterion_cls(logit_s, target)
         # kl  -a weight for KD distillation  GKD get loss, correct count, error_index
-        loss_kl, error_index = criterion_kl(logit_s, logit_t, target)
+        if opt.kd_type == 'GKD':
+            loss_kl, error_index = criterion_kl(logit_s, logit_t, target)
+        else:
+            loss_kl = criterion_kl(logit_s, logit_t, target)
 
         # other kd beyond KL divergence
         if opt.distill == 'kd':
