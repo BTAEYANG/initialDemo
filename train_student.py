@@ -79,6 +79,9 @@ def parse_option():
                         help='where to change beta, can be a list')
     parser.add_argument('--new_beta', type=float, default=None, help='record new weight balance for other losses')
     parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
+    parser.add_argument('--cuda_id', type=int, default=3, help='cuda run id')
+
+
 
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
@@ -120,9 +123,12 @@ def parse_option():
 
 
 def main():
+
     best_acc = 0
 
     opt = parse_option()
+
+    torch.cuda.set_device(opt.cuda_id)
 
     # tensorboard logger
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
