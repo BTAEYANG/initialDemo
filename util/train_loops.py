@@ -110,7 +110,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         if opt.kd_type == 'GKD':
             loss_kl, error_index = criterion_kl(logit_s, logit_t, target)
         else:
-            loss_kl = criterion_kl(logit_s, target)
+            loss_kl = criterion_kl(logit_s, logit_t)
 
         # other kd beyond KL divergence
         if opt.distill == 'kd':
