@@ -138,7 +138,7 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, is_feat=False, preact=False, feat_preact=False):
+    def forward(self, x, is_feat=False, preact=False):
         out = F.relu(self.bn1(self.conv1(x)))
         f0 = out
         out, f1_pre = self.layer1(out)
@@ -153,10 +153,9 @@ class ResNet(nn.Module):
         out = out.view(out.size(0), -1)
         f5 = out
         out = self.linear(out)
+
         if is_feat:
-            if feat_preact:
-                return [f0, f1_pre, f1, f2_pre, f2, f3_pre, f3, f4, f4_pre, f5], out
-            elif preact:
+            if preact:
                 return [[f0, f1_pre, f2_pre, f3_pre, f4_pre, f5], out]
             else:
                 return [f0, f1, f2, f3, f4, f5], out
