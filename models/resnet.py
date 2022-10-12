@@ -251,8 +251,6 @@ if __name__ == '__main__':
 
     net = resnet32x4(num_classes=100)
 
-    print(net)
-
     feats, logit = net(x, is_feat=True, preact=False, feat_preact=False)
     for f in feats:
         print(f.shape, f.min().item())

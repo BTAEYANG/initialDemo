@@ -200,11 +200,8 @@ def ShuffleV2(**kwargs):
 if __name__ == '__main__':
     net = ShuffleV2(num_classes=100)
     x = torch.randn(3, 3, 32, 32)
-    import time
-    a = time.time()
     feats, logit = net(x, is_feat=True, preact=True)
-    b = time.time()
-    print(b - a)
+
     for f in feats:
         print(f.shape, f.min().item())
     print(logit.shape)

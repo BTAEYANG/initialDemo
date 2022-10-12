@@ -114,7 +114,6 @@ class MobileNetV2(nn.Module):
         self.avgpool = nn.AvgPool2d(H, ceil_mode=True)
 
         self._initialize_weights()
-        print(T, width_mult)
 
     def get_bn_before_relu(self):
         bn1 = self.blocks[1][-1].conv[-1]
@@ -187,9 +186,10 @@ def mobile_half(num_classes):
 if __name__ == '__main__':
     x = torch.randn(2, 3, 32, 32)
 
-    net = mobile_half(100)
+    net = mobile_half(num_classes=100)
 
     feats, logit = net(x, is_feat=True, preact=True)
+
     for f in feats:
         print(f.shape, f.min().item())
     print(logit.shape)
