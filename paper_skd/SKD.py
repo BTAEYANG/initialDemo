@@ -43,6 +43,8 @@ class SKD(nn.Module):
             stage_list_t[i] = embed_t[i](stage_list_t[i])
             if opt.model_t.__contains__('vgg'):
                 stage_list_fc_t.append(model_t.classifier(stage_list_t[i]))
+            elif opt.model_t.__contains__('ResNet'):
+                stage_list_fc_t.append(model_t.linear(stage_list_t[i]))
             else:
                 stage_list_fc_t.append(model_t.fc(stage_list_t[i]))
 
@@ -50,6 +52,8 @@ class SKD(nn.Module):
             stage_list_s[i] = embed_s[i](stage_list_s[i])
             if opt.model_t.__contains__('vgg'):
                 stage_list_fc_s.append(model_t.classifier(stage_list_s[i]))
+            elif opt.model_t.__contains__('ResNet'):
+                stage_list_fc_s.append(model_t.linear(stage_list_s[i]))
             else:
                 stage_list_fc_s.append(model_t.fc(stage_list_s[i]))
 

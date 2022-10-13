@@ -185,6 +185,7 @@ def ResNet152(**kwargs):
 
 if __name__ == '__main__':
     net = ResNet50(num_classes=100)
+    print(net)
     x = torch.randn(2, 3, 32, 32)
     feats, logit = net(x, is_feat=True, preact=True)
 
