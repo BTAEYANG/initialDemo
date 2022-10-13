@@ -2,11 +2,6 @@ import argparse
 
 import torch
 from torch import nn
-from torchsummary import torchsummary
-
-from models import resnet32x4, resnet8x4, wrn_40_2, wrn_40_1, wrn_16_2
-from models.vgg import vgg8, vgg13
-from util.embedding_util import MLPEmbed, LinearEmbed
 import torch.nn.functional as F
 
 
@@ -120,43 +115,43 @@ class SKD_Loss(nn.Module):
 
 if __name__ == '__main__':
     pass
-    x = torch.randn(64, 3, 32, 32)
-
-    b, _, _, _ = x.shape
-
-    s_net = wrn_40_1(num_classes=100)
-    t_net = wrn_40_2(num_classes=100)
-
-    f_s, s_logit = s_net(x, is_feat=True, preact=False)
-    f_t, t_logit = t_net(x, is_feat=True, preact=False)
-
-    skd = SKD()
-
-    embed_s = nn.ModuleList([])
-    embed_t = nn.ModuleList([])
-    f_t = f_t[:-1]
-    f_s = f_s[:-1]
-    dim_in_l = []
-    for i in range(len(f_t) - 1):
-        b_H, t_H = f_t[i].shape[2], f_t[i + 1].shape[2]
-        if b_H > t_H:
-            dim_in_l.append(int(t_H * t_H))
-        else:
-            dim_in_l.append(int(b_H * b_H))
-
-    for j in dim_in_l:
-        if f_s[-1].shape[1] == f_t[-1].shape[1]:
-            embed_s.append(MLPEmbed(dim_in=j, dim_out=f_s[-1].shape[1]))
-            embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
-        else:
-            embed_s.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
-            embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
-
-    with torch.no_grad():
-        parser = argparse.ArgumentParser('argument for training')
-        parser.add_argument('--model_t', type=str, default='wrn_40_2', help='')
-        parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
-        opt = parser.parse_args()
-        t_tensor, s_tensor, t_fc_tensor, s_fc_tensor = skd(f_t, f_s, embed_s, embed_t, t_net, opt)
-        loss = SKD_Loss('SmoothL1')
-        loss_val = loss(t_tensor, s_tensor, t_fc_tensor, s_fc_tensor, opt)
+    # x = torch.randn(64, 3, 32, 32)
+    #
+    # b, _, _, _ = x.shape
+    #
+    # s_net = wrn_40_1(num_classes=100)
+    # t_net = wrn_40_2(num_classes=100)
+    #
+    # f_s, s_logit = s_net(x, is_feat=True, preact=False)
+    # f_t, t_logit = t_net(x, is_feat=True, preact=False)
+    #
+    # skd = SKD()
+    #
+    # embed_s = nn.ModuleList([])
+    # embed_t = nn.ModuleList([])
+    # f_t = f_t[:-1]
+    # f_s = f_s[:-1]
+    # dim_in_l = []
+    # for i in range(len(f_t) - 1):
+    #     b_H, t_H = f_t[i].shape[2], f_t[i + 1].shape[2]
+    #     if b_H > t_H:
+    #         dim_in_l.append(int(t_H * t_H))
+    #     else:
+    #         dim_in_l.append(int(b_H * b_H))
+    #
+    # for j in dim_in_l:
+    #     if f_s[-1].shape[1] == f_t[-1].shape[1]:
+    #         embed_s.append(MLPEmbed(dim_in=j, dim_out=f_s[-1].shape[1]))
+    #         embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
+    #     else:
+    #         embed_s.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
+    #         embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
+    #
+    # with torch.no_grad():
+    #     parser = argparse.ArgumentParser('argument for training')
+    #     parser.add_argument('--model_t', type=str, default='wrn_40_2', help='')
+    #     parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
+    #     opt = parser.parse_args()
+    #     t_tensor, s_tensor, t_fc_tensor, s_fc_tensor = skd(f_t, f_s, embed_s, embed_t, t_net, opt)
+    #     loss = SKD_Loss('SmoothL1')
+    #     loss_val = loss(t_tensor, s_tensor, t_fc_tensor, s_fc_tensor, opt)
