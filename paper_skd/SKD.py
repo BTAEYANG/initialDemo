@@ -4,6 +4,11 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from models import resnet32x4, ShuffleV1, resnet8x4, wrn_40_1, wrn_40_2
+from models.mobilenetv2 import MobileNetV2, mobile_half
+from models.vgg import vgg8, vgg13
+from util.embedding_util import MLPEmbed
+
 
 class SKD(nn.Module):
 
@@ -119,8 +124,8 @@ if __name__ == '__main__':
     #
     # b, _, _, _ = x.shape
     #
-    # s_net = wrn_40_1(num_classes=100)
-    # t_net = wrn_40_2(num_classes=100)
+    # s_net = mobile_half(num_classes=100)
+    # t_net = vgg13(num_classes=100)
     #
     # f_s, s_logit = s_net(x, is_feat=True, preact=False)
     # f_t, t_logit = t_net(x, is_feat=True, preact=False)
@@ -131,25 +136,33 @@ if __name__ == '__main__':
     # embed_t = nn.ModuleList([])
     # f_t = f_t[:-1]
     # f_s = f_s[:-1]
-    # dim_in_l = []
+    # dim_in_t = []
+    # dim_in_s = []
     # for i in range(len(f_t) - 1):
     #     b_H, t_H = f_t[i].shape[2], f_t[i + 1].shape[2]
     #     if b_H > t_H:
-    #         dim_in_l.append(int(t_H * t_H))
+    #         dim_in_t.append(int(t_H * t_H))
     #     else:
-    #         dim_in_l.append(int(b_H * b_H))
+    #         dim_in_t.append(int(b_H * b_H))
     #
-    # for j in dim_in_l:
-    #     if f_s[-1].shape[1] == f_t[-1].shape[1]:
-    #         embed_s.append(MLPEmbed(dim_in=j, dim_out=f_s[-1].shape[1]))
-    #         embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
+    # for k in range(len(f_s) - 1):
+    #     s_b_H, s_t_H = f_s[k].shape[2], f_s[k + 1].shape[2]
+    #     if s_b_H > s_t_H:
+    #         dim_in_s.append(int(s_t_H * s_t_H))
     #     else:
-    #         embed_s.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
-    #         embed_t.append(MLPEmbed(dim_in=j, dim_out=f_t[-1].shape[1]))
+    #         dim_in_s.append(int(s_b_H * s_b_H))
+    #
+    # for t, s in zip(dim_in_t, dim_in_s):
+    #     if f_s[-1].shape[1] == f_t[-1].shape[1]:
+    #         embed_s.append(MLPEmbed(dim_in=t, dim_out=f_t[-1].shape[1]))
+    #         embed_t.append(MLPEmbed(dim_in=t, dim_out=f_t[-1].shape[1]))
+    #     else:
+    #         embed_s.append(MLPEmbed(dim_in=s, dim_out=f_t[-1].shape[1]))
+    #         embed_t.append(MLPEmbed(dim_in=t, dim_out=f_t[-1].shape[1]))
     #
     # with torch.no_grad():
     #     parser = argparse.ArgumentParser('argument for training')
-    #     parser.add_argument('--model_t', type=str, default='wrn_40_2', help='')
+    #     parser.add_argument('--model_t', type=str, default='vgg13', help='')
     #     parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
     #     opt = parser.parse_args()
     #     t_tensor, s_tensor, t_fc_tensor, s_fc_tensor = skd(f_t, f_s, embed_s, embed_t, t_net, opt)

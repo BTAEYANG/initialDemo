@@ -172,32 +172,50 @@ def main():
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
     elif opt.distill == 'SKD':
+
         embed_s = nn.ModuleList([])
         embed_t = nn.ModuleList([])
+
         feat_t = feat_t[:-1]
-        dim_in_l = []
+        feat_s = feat_s[:-1]
+
+        dim_in_t = []
+        dim_in_s = []
+
         for i in range(len(feat_t) - 1):
             b_H, t_H = feat_t[i].shape[2], feat_t[i + 1].shape[2]
             if b_H > t_H:
-                dim_in_l.append(int(t_H * t_H))
+                dim_in_t.append(int(t_H * t_H))
             else:
-                dim_in_l.append(int(b_H * b_H))
+                dim_in_t.append(int(b_H * b_H))
 
-        for j in dim_in_l:
-            if feat_s[-1].shape[1] == feat_t[-1].shape[1]:
-                embed_s.append(MLPEmbed(dim_in=j, dim_out=feat_s[-1].shape[1]))
-                embed_t.append(MLPEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
+        for k in range(len(feat_s) - 1):
+            s_b_H, s_t_H = feat_s[k].shape[2], feat_s[k + 1].shape[2]
+            if s_b_H > s_t_H:
+                dim_in_s.append(int(s_t_H * s_t_H))
             else:
-                embed_s.append(MLPEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
-                embed_t.append(MLPEmbed(dim_in=j, dim_out=feat_t[-1].shape[1]))
+                dim_in_s.append(int(s_b_H * s_b_H))
+
+        for t, s in zip(dim_in_t, dim_in_s):
+            if feat_s[-1].shape[1] == feat_t[-1].shape[1]:
+                embed_s.append(MLPEmbed(dim_in=t, dim_out=feat_t[-1].shape[1]))
+                embed_t.append(MLPEmbed(dim_in=t, dim_out=feat_t[-1].shape[1]))
+            else:
+                embed_s.append(MLPEmbed(dim_in=s, dim_out=feat_t[-1].shape[1]))
+                embed_t.append(MLPEmbed(dim_in=t, dim_out=feat_t[-1].shape[1]))
+
         skd = SKD()
+
         module_list.append(skd)
         module_list.append(embed_s)
         module_list.append(embed_t)
+
         trainable_list.append(skd)
         trainable_list.append(embed_s)
         trainable_list.append(embed_t)
+
         criterion_kd = SKD_Loss(opt.loss_type)
+
     else:
         raise NotImplementedError(opt.distill)
 
