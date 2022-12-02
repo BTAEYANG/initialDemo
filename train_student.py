@@ -62,7 +62,7 @@ def parse_option():
     # distillation
     parser.add_argument('--distill', type=str, default='kd', choices=['kd', 'FPD', 'hint', 'attention', 'similarity',
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
-                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD'])
+                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD', 'DWD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
     parser.add_argument('--loss_type', type=str, default='MSE', help='choose loss-type function')
 
@@ -126,7 +126,10 @@ def main():
 
     opt = parse_option()
 
-    torch.cuda.set_device(opt.cuda_id)
+    if opt.distill == 'SKD':
+        torch.cuda.set_device(opt.cuda_id)
+    else:
+        torch.cuda.set_device()
 
     # tensorboard logger
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
