@@ -18,6 +18,7 @@ import torch.backends.cudnn as cudnn
 from dataset.cifar import getDataLoader
 from distillation_zoo.KD import DistillKL
 from models import model_dict
+from paper.DWD import DWD, DWD_Loss
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
 from paper_skd.SKD import SKD, SKD_Loss
@@ -81,8 +82,6 @@ def parse_option():
     parser.add_argument('--reverse', default='False', action='store_true', help='reverse loss factor')
     parser.add_argument('--cuda_id', type=int, default=3, help='cuda run id')
 
-
-
     # KL distillation
     parser.add_argument('--kd_T', type=float, default=4, help='temperature for KD distillation')
 
@@ -123,7 +122,6 @@ def parse_option():
 
 
 def main():
-
     best_acc = 0
 
     opt = parse_option()
@@ -171,6 +169,11 @@ def main():
         module_list.append(fpd)
         trainable_list.append(fpd)
         criterion_kd = FPD_Loss()
+    elif opt.distill == 'DWD':
+        dwd = DWD(feat_t[:-1], feat_s[:-1])
+        module_list.append(dwd)
+        trainable_list.append(dwd)
+        criterion_kd = DWD_Loss()
     elif opt.distill == 'SKD':
 
         embed_s = nn.ModuleList([])
