@@ -72,9 +72,9 @@ def parse_option():
 
     parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
 
-    parser.add_argument('--beta_increase_rate', type=float, default=1.2,
+    parser.add_argument('--beta_increase_rate', type=float, default=1,
                         help='increase rate for beta loss -b， default 1 beta not change')
-    parser.add_argument('--beta_decay_rate', type=float, default=0.5,
+    parser.add_argument('--beta_decay_rate', type=float, default=1,
                         help='decay rate for beta loss -b， default 1 beta not change')
     parser.add_argument('--beta_rate_epochs', type=str, default='90,120,150,180,210',
                         help='where to change beta, can be a list')
