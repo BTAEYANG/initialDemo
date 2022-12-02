@@ -174,7 +174,7 @@ def main():
         dwd = DWD(feat_t[:-1], feat_s[:-1])
         module_list.append(dwd)
         trainable_list.append(dwd)
-        criterion_kd = DWD_Loss()
+        criterion_kd = DWD_Loss(opt.loss_type)
     elif opt.distill == 'SKD':
 
         embed_s = nn.ModuleList([])
