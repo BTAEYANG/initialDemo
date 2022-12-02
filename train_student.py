@@ -128,8 +128,6 @@ def main():
 
     if opt.distill == 'SKD':
         torch.cuda.set_device(opt.cuda_id)
-    else:
-        torch.cuda.set_device()
 
     # tensorboard logger
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
