@@ -82,12 +82,30 @@ class DWD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
+    def _channel_mean_loss(self, x, y):
+        loss = 0.
+        for s, t in zip(x, y):
+            s = self.avg_pool(s)
+            t = self.avg_pool(t)
+            loss += self.loss(s, t)
+        return loss
+
+    def _spatial_mean_loss(self, x, y):
+        loss = 0.
+        for s, t in zip(x, y):
+            s = s.mean(dim=1, keepdim=False)
+            t = t.mean(dim=1, keepdim=False)
+            loss += self.loss(s, t)
+        return loss
+
     def forward(self, f_t, f_s, f_t_res, f_s_res, opt):
 
-        loss_base = self.loss(f_t, f_s)
-        loss_res = self.loss(f_t_res, f_s_res)
+        loss_base_s = self._spatial_mean_loss(f_t, f_s)
+        loss_base_c = self._channel_mean_loss(f_t, f_s)
+        loss_res_s = self._spatial_mean_loss(f_t_res, f_s_res)
+        loss_res_c = self._channel_mean_loss(f_t_res, f_s_res)
 
-        loss = [loss_base, loss_res]
+        loss = [loss_base_s, loss_base_c, loss_res_s, loss_res_c]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         if opt.reverse:
             loss.reverse()
