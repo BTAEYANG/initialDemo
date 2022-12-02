@@ -72,7 +72,7 @@ class DWD_Loss(nn.Module):
 
     def __init__(self, loss_type):
         super(DWD_Loss, self).__init__()
-
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
         if loss_type == 'SmoothL1':
             self.loss = nn.SmoothL1Loss(reduction='mean', beta=1.0)
         elif loss_type == 'MSE':
