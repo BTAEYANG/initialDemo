@@ -54,6 +54,11 @@ class DWD(nn.Module):
         self.t_depth_point_list = t_depth_point_list
         self.s_depth_point_list = s_depth_point_list
 
+    @staticmethod
+    def _upSample_add(x, y):
+        _, _, H, W = y.shape
+        return F.interpolate(x, size=(H, W), mode='bilinear') + y
+
     def forward(self, f_t, f_s):
 
         f_t_l = [self.t_depth_point_list[index](t) for index, t in enumerate(f_t)]
