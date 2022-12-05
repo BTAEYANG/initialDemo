@@ -70,7 +70,7 @@ def parse_option():
     parser.add_argument('-a', '--alpha', type=float, default=None, help='weight balance for KD')
     parser.add_argument('-b', '--beta', type=float, default=10, help='weight balance for other losses')
 
-    parser.add_argument('--kd_type', type=str, default='GKD', help='choose KD-loss type')
+    parser.add_argument('--kd_type', type=str, default='KD', help='choose KD-loss type')
 
     parser.add_argument('--beta_increase_rate', type=float, default=1,
                         help='increase rate for beta loss -b， default 1 beta not change')
