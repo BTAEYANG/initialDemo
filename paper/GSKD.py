@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dataset.cifar import getDataLoader
+import argparse
 from paper.GKD import GKD
 from train_student import parse_option
 
@@ -36,7 +37,10 @@ class GSKD(nn.Module):
 
 if __name__ == '__main__':
 
-    opt = parse_option()
+    parser = argparse.ArgumentParser('argument for training')
+    parser.add_argument('--batch_size', type=int, default=64, help='batch_size')
+    parser.add_argument('--dataset', type=str, default='CIFAR100', choices=['CIFAR100', 'CIFAR10'], help='dataset')
+    opt = parser.parse_args()
 
     train_loader, val_loader, n_cls = getDataLoader(opt)
 
