@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import os
-import argparse
 import time
+import argparse
 
 import tensorboard_logger as tb_logger
 import torch

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from dataset.cifar import getDataLoader
 from paper.GKD import GKD
 from train_student import parse_option
 
@@ -36,4 +37,13 @@ class GSKD(nn.Module):
 if __name__ == '__main__':
 
     opt = parse_option()
-    criterion_kl = GKD(opt.kd_T)
+
+    train_loader, val_loader, n_cls = getDataLoader(opt)
+
+    for idx, data in enumerate(train_loader):
+        input, target = data
+        if torch.cuda.is_available():
+            input = input.cuda()
+            target = target.cuda()
+        print(input.shape)
+        print(target.shape)

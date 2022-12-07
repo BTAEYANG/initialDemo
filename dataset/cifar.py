@@ -8,8 +8,8 @@ def get_data_folder(opt):
     """
     return server-dependent path to store the data
     """
-    # root_path = 'E:/home/lab265/lab265/datasets'  # windows
-    root_path = '/home/lab265/lab265/datasets'  # v100 linux
+    root_path = 'E:/home/lab265/lab265/datasets'  # windows
+    # root_path = '/home/lab265/lab265/datasets'  # v100 linux
     # root_path = '/Disk1/datasets'  # 1080 linux
     data_folder = os.path.join(root_path, opt.dataset)
 
