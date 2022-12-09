@@ -8,8 +8,9 @@ from util.embedding_util import MLPEmbed
 class GSKD(nn.Module):
     """Guided Similarity Knowledge Distillation"""
 
-    def __init__(self):
+    def __init__(self, batch_size):
         super(GSKD, self).__init__()
+        self.s_matrix = torch.eye(batch_size)
 
     @staticmethod
     def _get_error_index(y_t, label):
@@ -21,6 +22,7 @@ class GSKD(nn.Module):
         return error_index
 
     def forward(self, y_t, label, f_s, model_t, opt, embed_s):
+        s_matrix = self.s_matrix
         error_index = self._get_error_index(y_t, label)
         if len(error_index):
             for s in f_s:
@@ -38,13 +40,13 @@ class GSKD(nn.Module):
                 f = model_t.fc(embed_s[i](f))
             tensor_l.append(torch.softmax((f @ y_t.t()), dim=0))  # 64 * 64
 
-        return tensor_l
+        return tensor_l, s_matrix
 
 
 class GSKD_Loss(nn.Module):
     """ Guided Similarity Knowledge Distilling Loss"""
 
-    def __init__(self, loss_type, batch_size):
+    def __init__(self, loss_type):
         super(GSKD_Loss, self).__init__()
 
         if loss_type == 'SmoothL1':
@@ -56,10 +58,8 @@ class GSKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-        self.s_matrix = torch.eye(batch_size)
-
-    def forward(self, tensor_l, opt):
-        loss = [self.loss(i, self.s_matrix) for i in tensor_l]
+    def forward(self, tensor_l, s_matrix, opt):
+        loss = [self.loss(i, s_matrix) for i in tensor_l]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         if opt.reverse:
             loss.reverse()

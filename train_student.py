@@ -228,7 +228,7 @@ def main():
             h = s.shape[2]
             embed_s.append(MLPEmbed(dim_in=h * h, dim_out=feat_t[-1].shape[1]))
 
-        gskd = GSKD()
+        gskd = GSKD(opt.batch_size)
 
         module_list.append(gskd)
         module_list.append(embed_s)
@@ -236,7 +236,7 @@ def main():
         trainable_list.append(gskd)
         trainable_list.append(embed_s)
 
-        criterion_kd = GSKD_Loss(opt.loss_type, opt.batch_size)
+        criterion_kd = GSKD_Loss(opt.loss_type)
     else:
         raise NotImplementedError(opt.distill)
 
