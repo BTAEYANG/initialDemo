@@ -222,9 +222,20 @@ def main():
         criterion_kd = SKD_Loss(opt.loss_type)
 
     elif opt.distill == 'GSKD':
-        gskd = GSKD(feat_s[:-1], feat_t[-1])
+
+        embed_s = nn.ModuleList([])
+        for s in feat_s:
+            h = s.shape[2]
+            embed_s.append(MLPEmbed(dim_in=h * h, dim_out=feat_t[-1].shape[1]))
+
+        gskd = GSKD()
+
         module_list.append(gskd)
+        module_list.append(embed_s)
+
         trainable_list.append(gskd)
+        trainable_list.append(embed_s)
+
         criterion_kd = GSKD_Loss(opt.loss_type, opt.batch_size)
     else:
         raise NotImplementedError(opt.distill)

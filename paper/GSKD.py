@@ -8,12 +8,8 @@ from util.embedding_util import MLPEmbed
 class GSKD(nn.Module):
     """Guided Similarity Knowledge Distillation"""
 
-    def __init__(self, y_s, y_t):
+    def __init__(self):
         super(GSKD, self).__init__()
-        self.embed_s = nn.ModuleList([])
-        for s in y_s:
-            h = s.shape[2]
-            self.embed_s.append(MLPEmbed(dim_in=h * h, dim_out=y_t.shape[1]))
 
     @staticmethod
     def _get_error_index(y_t, label):
@@ -24,7 +20,7 @@ class GSKD(nn.Module):
         error_index = [i for i, x in enumerate(error) if x == 0]
         return error_index
 
-    def forward(self, y_t, label, f_s, model_t, opt):
+    def forward(self, y_t, label, f_s, model_t, opt, embed_s):
         error_index = self._get_error_index(y_t, label)
         if len(error_index):
             for s in f_s:
@@ -35,11 +31,11 @@ class GSKD(nn.Module):
             b, c, h, w = f.shape
             f = f.mean(dim=1, keepdim=False).view(b, h * w)
             if opt.model_t.__contains__('vgg'):
-                f = model_t.classifier(self.embed_s[i](f))
+                f = model_t.classifier(embed_s[i](f))
             elif opt.model_t.__contains__('ResNet'):
-                f = model_t.linear(self.embed_s[i](f))
+                f = model_t.linear(embed_s[i](f))
             else:
-                f = model_t.fc(self.embed_s[i](f))
+                f = model_t.fc(embed_s[i](f))
             tensor_l.append(torch.softmax(f @ y_t.t(), dim=0))  # 64 * 64
 
         return tensor_l
