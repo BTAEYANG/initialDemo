@@ -2,12 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dataset.cifar import getDataLoader
-import argparse
-
-from models import mobile_half, resnet32x4
-from paper.GKD import GKD
-from train_student import parse_option
 from util.embedding_util import MLPEmbed
 
 
@@ -46,7 +40,7 @@ class GSKD(nn.Module):
                 f = model_t.linear(self.embed_s[i](f))
             else:
                 f = model_t.fc(self.embed_s[i](f))
-            tensor_l.append(f @ y_t.t())  # 64 * 64
+            tensor_l.append(torch.softmax(f @ y_t.t(), dim=0))  # 64 * 64
 
         return tensor_l
 
@@ -79,18 +73,3 @@ class GSKD_Loss(nn.Module):
 
 if __name__ == '__main__':
     pass
-    # parser = argparse.ArgumentParser('argument for training')
-    # parser.add_argument('--model_t', type=str, default='', help='')
-    # opt = parser.parse_args()
-    #
-    # x = torch.randn(64, 3, 32, 32)
-    #
-    # s_net = mobile_half(num_classes=100)
-    # t_net = resnet32x4(num_classes=100)
-    #
-    # f_s, s_logit = s_net(x, is_feat=True, preact=False)
-    # f_t, t_logit = t_net(x, is_feat=True, preact=False)
-    #
-    # gskd = GSKD(f_s[:-1], f_t[-1])
-    #
-    # gskd(t_logit, f_s[:-1], t_net, opt)
