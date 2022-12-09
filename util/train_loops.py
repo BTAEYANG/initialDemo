@@ -127,6 +127,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             t_tensor, s_tensor, t_fc_tensor, s_fc_tensor = module_list[1](feat_t[:-1], feat_s[:-1], embed_s, embed_t, model_t, opt)
             loss_kd = criterion_kd(t_tensor, s_tensor, t_fc_tensor, s_fc_tensor, opt)
         elif opt.distill == 'GSKD':
+            embed_s = module_list[2]
             tensor_l = module_list[1](logit_t, target, feat_s[:-1], model_t, opt, embed_s)
             loss_kd = criterion_kd(tensor_l, opt)
         else:
