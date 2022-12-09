@@ -25,7 +25,7 @@ class GSKD(nn.Module):
         return error_index
 
     def forward(self, y_t, label, f_s, model_t, opt):
-        error_index = self.get_error_index(y_t, label)
+        error_index = self._get_error_index(y_t, label)
         if len(error_index):
             for s in f_s:
                 for j in error_index:
