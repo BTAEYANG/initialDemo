@@ -222,10 +222,10 @@ def main():
         criterion_kd = SKD_Loss(opt.loss_type)
 
     elif opt.distill == 'GSKD':
-
+        feat_s = feat_s[:-1]
         embed_s = nn.ModuleList([])
         for s in feat_s:
-            h = s.shape[2]
+            h = s.shape[1]
             embed_s.append(MLPEmbed(dim_in=h * h, dim_out=feat_t[-1].shape[1]))
 
         gskd = GSKD()
