@@ -21,6 +21,7 @@ from models import model_dict
 from paper.DWD import DWD, DWD_Loss
 from paper.FPD import FPD, FPD_Loss
 from paper.GKD import GKD
+from paper.GSKD import GSKD, GSKD_Loss
 from paper_skd.SKD import SKD, SKD_Loss
 from util.embedding_util import LinearEmbed, MLPEmbed
 from util.tool import adjust_learning_rate, get_teacher_name, load_teacher, adjust_beta_rate
@@ -62,7 +63,7 @@ def parse_option():
     # distillation
     parser.add_argument('--distill', type=str, default='kd', choices=['kd', 'FPD', 'hint', 'attention', 'similarity',
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
-                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD', 'DWD'])
+                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'SKD', 'DWD', 'GSKD'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
     parser.add_argument('--loss_type', type=str, default='MSE', help='choose loss-type function')
 
@@ -220,6 +221,11 @@ def main():
 
         criterion_kd = SKD_Loss(opt.loss_type)
 
+    elif opt.distill == 'GSKD':
+        gskd = GSKD(feat_s[:-1], feat_t[-1])
+        module_list.append(gskd)
+        trainable_list.append(gskd)
+        criterion_kd = GSKD_Loss(opt.loss_type, opt.batch_size)
     else:
         raise NotImplementedError(opt.distill)
 
