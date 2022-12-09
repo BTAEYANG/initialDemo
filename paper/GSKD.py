@@ -55,8 +55,8 @@ class GSKD_Loss(nn.Module):
         elif loss_type == 'L1':
             self.loss = nn.L1Loss()
 
-    def forward(self, tensor_l, opt):
-        s_matrix = torch.eye(opt.batch_size).cuda()
+    def forward(self, tensor_l, n, opt):
+        s_matrix = torch.eye(n).cuda()
         loss = [self.loss(i, s_matrix) for i in tensor_l]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         if opt.reverse:
