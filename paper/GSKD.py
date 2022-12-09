@@ -35,8 +35,10 @@ class GSKD(nn.Module):
             elif opt.model_t.__contains__('ResNet'):
                 f = model_t.linear(embed_s[i](f))
             else:
+                print(embed_s[i])
+                print(f.shape)
                 f = model_t.fc(embed_s[i](f))
-            tensor_l.append(torch.softmax(f @ y_t.t(), dim=0))  # 64 * 64
+            tensor_l.append(torch.softmax((f @ y_t.t()), dim=0))  # 64 * 64
 
         return tensor_l
 
