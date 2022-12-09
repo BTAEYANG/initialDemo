@@ -28,7 +28,6 @@ class GSKD(nn.Module):
                     s[j].data *= 0
         tensor_l = []
         for i, f in enumerate(f_s):
-            print(f.shape)
             b, c, h, w = f.shape
             f = f.mean(dim=1, keepdim=False).view(b, h * w)
             if opt.model_t.__contains__('vgg'):
@@ -36,8 +35,6 @@ class GSKD(nn.Module):
             elif opt.model_t.__contains__('ResNet'):
                 f = model_t.linear(embed_s[i](f))
             else:
-                print(embed_s[i])
-                print(f.shape)
                 f = model_t.fc(embed_s[i](f))
             tensor_l.append(torch.softmax((f @ y_t.t()), dim=0))  # 64 * 64
 
