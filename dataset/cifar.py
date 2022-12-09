@@ -8,8 +8,8 @@ def get_data_folder(opt):
     """
     return server-dependent path to store the data
     """
-    root_path = 'E:/home/lab265/lab265/datasets'  # windows
-    # root_path = '/home/lab265/lab265/datasets'  # v100 linux
+    # root_path = 'E:/home/lab265/lab265/datasets'  # windows
+    root_path = '/home/lab265/lab265/datasets'  # v100 linux
     # root_path = '/Disk1/datasets'  # 1080 linux
     data_folder = os.path.join(root_path, opt.dataset)
 
@@ -52,8 +52,8 @@ def getDataLoader(opt):
     else:
         assert False
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=opt.batch_size,
-                                               shuffle=True, pin_memory=True, num_workers=8)
+                                               shuffle=True, pin_memory=True, num_workers=4)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=opt.batch_size,
-                                              shuffle=False, pin_memory=True, num_workers=8)
+                                              shuffle=False, pin_memory=True, num_workers=4)
 
     return train_loader, test_loader, num_classes
