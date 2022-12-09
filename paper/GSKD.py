@@ -28,6 +28,7 @@ class GSKD(nn.Module):
                     s[j].data *= 0
         tensor_l = []
         for i, f in enumerate(f_s):
+            print(f.shape)
             b, c, h, w = f.shape
             f = f.mean(dim=1, keepdim=False).view(b, h * w)
             if opt.model_t.__contains__('vgg'):
