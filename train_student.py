@@ -230,17 +230,13 @@ def main():
 
         gskd = GSKD()
 
-        s_matrix = torch.eye(opt.batch_size)
-
         module_list.append(gskd)
         module_list.append(embed_s)
-        module_list.append(s_matrix)
 
         trainable_list.append(gskd)
         trainable_list.append(embed_s)
-        trainable_list.append(s_matrix)
 
-        criterion_kd = GSKD_Loss(opt.loss_type, s_matrix)
+        criterion_kd = GSKD_Loss(opt.loss_type)
     else:
         raise NotImplementedError(opt.distill)
 

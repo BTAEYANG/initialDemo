@@ -44,9 +44,8 @@ class GSKD(nn.Module):
 class GSKD_Loss(nn.Module):
     """ Guided Similarity Knowledge Distilling Loss"""
 
-    def __init__(self, loss_type, s_matrix):
+    def __init__(self, loss_type):
         super(GSKD_Loss, self).__init__()
-        self.s_matrix = s_matrix
         if loss_type == 'SmoothL1':
             self.loss = nn.SmoothL1Loss(reduction='mean', beta=1.0)
         elif loss_type == 'MSE':
@@ -57,7 +56,8 @@ class GSKD_Loss(nn.Module):
             self.loss = nn.L1Loss()
 
     def forward(self, tensor_l, opt):
-        loss = [self.loss(i, self.s_matrix) for i in tensor_l]
+        s_matrix = torch.eye(opt.batch_size)
+        loss = [self.loss(i, s_matrix) for i in tensor_l]
         factor = F.softmax(torch.Tensor(loss), dim=-1)
         if opt.reverse:
             loss.reverse()
