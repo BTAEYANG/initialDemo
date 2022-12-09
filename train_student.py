@@ -228,15 +228,19 @@ def main():
             h = s.shape[2]
             embed_s.append(MLPEmbed(dim_in=h * h, dim_out=feat_t[-1].shape[1]))
 
-        gskd = GSKD(opt.batch_size)
+        gskd = GSKD()
+
+        s_matrix = torch.eye(opt.batch_size)
 
         module_list.append(gskd)
         module_list.append(embed_s)
+        module_list.append(s_matrix)
 
         trainable_list.append(gskd)
         trainable_list.append(embed_s)
+        trainable_list.append(s_matrix)
 
-        criterion_kd = GSKD_Loss(opt.loss_type)
+        criterion_kd = GSKD_Loss(opt.loss_type, s_matrix)
     else:
         raise NotImplementedError(opt.distill)
 
